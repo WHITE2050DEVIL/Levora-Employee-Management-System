@@ -1,7 +1,7 @@
 // External Lib Import
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { Row, Col, Card, Button } from "react-bootstrap";
+import { Row, Col, Card, Button, Badge } from "react-bootstrap";
 import * as yup from "yup";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -13,11 +13,11 @@ import DepartmentRequest from "../../APIRequest/DepartmentRequest";
 
 const DepartmentCreateUpdatePage = () => {
   const [objectID, setObjectID] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Connect to the global Redux state slice
   const { DepartmentDetails } = useSelector((state) => state.Department);
 
   useEffect(() => {
@@ -28,44 +28,64 @@ const DepartmentCreateUpdatePage = () => {
     }
   }, [searchParams]);
 
-  /*
-   * Form validation schema matrix
-   */
   const validationSchema = yup.object().shape({
-    DepartmentName: yup.string().required(t("Please Enter Department Name")),
-    DepartmentShortName: yup.string().required(t("Please Enter Department Short Name")),
+    DepartmentName: yup
+      .string()
+      .trim()
+      .required(t("Please Enter Department Name"))
+      .min(3, t("Department Name should be at least 3 characters")),
+    DepartmentShortName: yup
+      .string()
+      .trim()
+      .required(t("Please Enter Department Short Name"))
+      .max(8, t("Short Name should not exceed 8 characters")),
   });
 
-  /**
-   * Handle the form submission wrapper
-   */
-  const CreateUpdateDepartment = (values) => {
-    const payload = {
-      DepartmentName: values.DepartmentName,
-      DepartmentShortName: values.DepartmentShortName,
-      DepartmentDetails: values.DepartmentDetails || "",
-      DepartmentStatus: !!values.DepartmentStatus, // Forces checkbox output to a clean Boolean format
-    };
-
-    if (!objectID) {
-      DepartmentRequest.DepartmentCreate(payload).then((result) => {
-        if (result) {
-          navigate("/department/department-list");
-        }
-      });
-    } else {
-      DepartmentRequest.DepartmentUpdate(objectID, payload).then((result) => {
-        if (result) {
-          navigate("/department/department-list");
-        }
-      });
-    }
+  const buildShortName = (name) => {
+    if (!name) return "";
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 8);
   };
 
-  // Explicit initialization values to prevent controlled component layout flashing
-  const formDefaults = objectID 
-    ? DepartmentDetails 
-    : { DepartmentName: "", DepartmentShortName: "", DepartmentDetails: "", DepartmentStatus: true };
+  const formDefaults = useMemo(
+    () =>
+      objectID
+        ? DepartmentDetails
+        : {
+            DepartmentName: "",
+            DepartmentShortName: "",
+            DepartmentDetails: "",
+            DepartmentStatus: true,
+          },
+    [DepartmentDetails, objectID]
+  );
+
+  const createUpdateDepartment = async (values) => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    const payload = {
+      DepartmentName: values.DepartmentName?.trim(),
+      DepartmentShortName:
+        values.DepartmentShortName?.trim() || buildShortName(values.DepartmentName),
+      DepartmentDetails: values.DepartmentDetails || "",
+      DepartmentStatus: !!values.DepartmentStatus,
+    };
+
+    const result = !objectID
+      ? await DepartmentRequest.DepartmentCreate(payload)
+      : await DepartmentRequest.DepartmentUpdate(objectID, payload);
+
+    if (result) {
+      navigate("/department/department-list");
+    }
+    setIsSaving(false);
+  };
 
   return (
     <>
@@ -83,68 +103,85 @@ const DepartmentCreateUpdatePage = () => {
 
       <Row>
         <Col xs={12}>
-          <Card>
+          <Card className="hr-form-card">
             <Card.Body>
-              <Row>
-                <Col>
-                  <VerticalForm
-                    key={objectID ? DepartmentDetails?._id || "edit-mode" : "create-mode"}
-                    onSubmit={CreateUpdateDepartment}
-                    validationSchema={validationSchema}
-                    defaultValues={formDefaults}
-                  >
-                    <Row>
-                      <Col xs={12}>
-                        <FormInput
-                          name="DepartmentName"
-                          label={t("Department Name")}
-                          placeholder={t("Enter Department Name")}
-                          containerClass={"mb-3"}
-                        />
-                        
-                        <FormInput
-                          name="DepartmentShortName"
-                          label={t("Department Short Name")}
-                          placeholder={t("Enter Department Short Name")}
-                          containerClass={"mb-3"}
-                        />
+              <div className="hr-list-header">
+                <div>
+                  <h4>{!objectID ? "Department Setup" : "Department Update"}</h4>
+                  <p>Create and maintain department identity, visibility, and notes.</p>
+                </div>
+                <Badge bg={formDefaults.DepartmentStatus ? "success" : "secondary"}>
+                  {formDefaults.DepartmentStatus ? "Active" : "Inactive"}
+                </Badge>
+              </div>
 
-                        <FormInput
-                          name="DepartmentDetails"
-                          label={t("Department Details")}
-                          placeholder={t("Enter Department Details")}
-                          containerClass={"mb-3"}
-                          // ⚠️ NOTE: If the rich text editor component doesn't show up, 
-                          // change "simple-rich-editor" back to "simple-rich-edior" (matching your UI component's file spelling)
-                          type="simple-rich-editor" 
-                        />
+              <VerticalForm
+                key={objectID ? DepartmentDetails?._id || "edit-mode" : "create-mode"}
+                onSubmit={createUpdateDepartment}
+                validationSchema={validationSchema}
+                defaultValues={formDefaults}
+              >
+                <Row>
+                  <Col md={6}>
+                    <FormInput
+                      name="DepartmentName"
+                      label={t("Department Name")}
+                      placeholder={t("Enter Department Name (e.g. Human Resources)")}
+                      containerClass={"mb-3"}
+                    />
+                  </Col>
+                  <Col md={6}>
+                    <FormInput
+                      name="DepartmentShortName"
+                      label={t("Department Short Name")}
+                      placeholder={t("Enter Department Short Name (e.g. HR)")}
+                      containerClass={"mb-3"}
+                    />
+                  </Col>
+                </Row>
 
-                        <FormInput
-                          name="DepartmentStatus"
-                          label={t("Active Status")}
-                          containerClass={"mb-3"}
-                          type="checkbox"
-                        />
-                      </Col>
-                    </Row>
+                <Row>
+                  <Col xs={12}>
+                    <FormInput
+                      name="DepartmentDetails"
+                      label={t("Department Details")}
+                      placeholder={t("Describe scope, goals, and ownership of this department")}
+                      containerClass={"mb-3"}
+                      type="simple-rich-edior"
+                    />
+                  </Col>
+                </Row>
 
-                    <Row className="mt-3">
-                      <Col>
-                        <Button type="submit" variant="success" className="me-2">
-                          {!objectID ? t("Add Department") : t("Update Department")}
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="light" 
-                          onClick={() => navigate("/department/department-list")}
-                        >
-                          {t("Cancel")}
-                        </Button>
-                      </Col>
-                    </Row>
-                  </VerticalForm>
-                </Col>
-              </Row>
+                <Row>
+                  <Col xs={12}>
+                    <FormInput
+                      name="DepartmentStatus"
+                      label={t("Active Status")}
+                      containerClass={"mb-3"}
+                      type="checkbox"
+                    />
+                  </Col>
+                </Row>
+
+                <Row className="mt-3">
+                  <Col>
+                    <Button type="submit" variant="primary" className="me-2" disabled={isSaving}>
+                      {isSaving
+                        ? t("Saving...")
+                        : !objectID
+                          ? t("Add Department")
+                          : t("Update Department")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="light"
+                      onClick={() => navigate("/department/department-list")}
+                    >
+                      {t("Cancel")}
+                    </Button>
+                  </Col>
+                </Row>
+              </VerticalForm>
             </Card.Body>
           </Card>
         </Col>

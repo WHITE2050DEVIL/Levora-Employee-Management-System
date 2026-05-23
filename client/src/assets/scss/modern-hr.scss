@@ -468,6 +468,122 @@ body.authentication-bg {
   border-bottom: 1px solid var(--hr-line);
 }
 
+.hr-form-card .card-body {
+  padding: 24px;
+}
+
+.hr-leftbar-user {
+  border-bottom: 1px solid var(--hr-line);
+  margin-bottom: 8px;
+  padding: 16px 16px 14px;
+}
+
+.hr-leftbar-user .leftbar-user-name {
+  color: var(--hr-ink) !important;
+  display: block;
+}
+
+.hr-topbar .topbar-menu > li > .btn,
+.hr-topbar .topbar-menu > li > .nav-link {
+  color: var(--hr-ink);
+}
+
+.hr-topbar-context {
+  align-items: center;
+  gap: 10px;
+  margin-left: 18px;
+}
+
+.hr-topbar-time {
+  background: var(--hr-panel-soft);
+  border: 1px solid var(--hr-line);
+  border-radius: 999px;
+  color: var(--hr-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 7px 12px;
+}
+
+.hr-profile-card,
+.hr-profile-form-card {
+  height: 100%;
+}
+
+.hr-profile-summary {
+  padding: 12px 10px 2px;
+}
+
+.hr-profile-avatar {
+  border: 3px solid var(--hr-line);
+  border-radius: 50%;
+  height: 116px;
+  object-fit: cover;
+  width: 116px;
+}
+
+.hr-profile-stats {
+  border-top: 1px solid var(--hr-line);
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.hr-profile-stats div {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+}
+
+.hr-profile-stats span {
+  color: var(--hr-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hr-profile-stats strong {
+  color: var(--hr-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.hr-date-input {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  position: relative;
+}
+
+.hr-date-input i {
+  color: var(--hr-primary);
+  font-size: 1rem;
+  left: 12px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.hr-date-input .form-control {
+  cursor: pointer;
+  padding-left: 34px;
+}
+
+.react-datepicker {
+  border-color: var(--hr-line) !important;
+  border-radius: 8px !important;
+}
+
+.react-datepicker__header {
+  background: var(--hr-panel-soft) !important;
+  border-bottom-color: var(--hr-line) !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: var(--hr-primary) !important;
+}
+
 body[data-layout-color="dark"] .content-page,
 body[data-layout-color="dark"] .content-page .content,
 body[data-layout-color="dark"] .wrapper {

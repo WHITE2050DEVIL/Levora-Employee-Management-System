@@ -27,6 +27,13 @@ const FormInput = ({
   onChange,
   defaultValue,
   options,
+  minDate,
+  maxDate,
+  dateFormat,
+  showMonthDropdown,
+  showYearDropdown,
+  dropdownMode,
+  yearDropdownItemNumber,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [defaultValueSelect, setDefaultValueSelect] = useState(defaultValue);
@@ -406,6 +413,15 @@ const FormInput = ({
                 onChange={(date) => {
                   setFieldValue(name, date);
                 }}
+                minDate={minDate}
+                maxDate={maxDate}
+                dateFormat={dateFormat}
+                placeholder={placeholder}
+                showMonthDropdown={showMonthDropdown}
+                showYearDropdown={showYearDropdown}
+                dropdownMode={dropdownMode}
+                yearDropdownItemNumber={yearDropdownItemNumber}
+                hideAddon={true}
               />
 
               <ErrorMessage name={name}>

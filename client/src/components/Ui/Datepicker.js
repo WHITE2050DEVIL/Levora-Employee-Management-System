@@ -6,22 +6,23 @@ import classNames from "classnames";
 type DatepickerInputProps = {
   onClick?: () => void,
   value?: string,
+  placeholder?: string,
+  className?: string,
 };
 
 /* Datepicker with Input */
 const DatepickerInput = forwardRef((props: DatepickerInputProps, ref) => {
-  const onDateValueChange = () => {
-    console.log("date value changed");
-  };
   return (
-    <input
-      type="text"
-      className="form-control date"
-      onClick={props.onClick}
-      value={props.value}
-      onChange={onDateValueChange}
-      ref={ref}
-    />
+    <div className="hr-date-input" onClick={props.onClick} ref={ref}>
+      <i className="mdi mdi-calendar-month-outline"></i>
+      <input
+        type="text"
+        className={classNames("form-control date", props.className)}
+        value={props.value}
+        placeholder={props.placeholder || "Select date"}
+        readOnly
+      />
+    </div>
   );
 });
 
@@ -63,13 +64,23 @@ type GlossyDatepickerProps = {
   showTimeSelectOnly?: boolean,
   monthsShown?: number,
   inline?: boolean,
+  placeholder?: string,
+  showMonthDropdown?: boolean,
+  showYearDropdown?: boolean,
+  dropdownMode?: "select" | "scroll",
+  yearDropdownItemNumber?: number,
+  peekNextMonth?: boolean,
+  showPopperArrow?: boolean,
 };
 
 const GlossyDatepicker = (props: GlossyDatepickerProps): React$Element<any> => {
   // handle custom input
   const input =
     (props.hideAddon || false) === true ? (
-      <DatepickerInput />
+      <DatepickerInput
+        className={props.inputClass}
+        placeholder={props.placeholder}
+      />
     ) : (
       <DatepickerInputWithAddon />
     );
@@ -92,6 +103,12 @@ const GlossyDatepicker = (props: GlossyDatepickerProps): React$Element<any> => {
         monthsShown={props.monthsShown}
         showTimeSelectOnly={props.showTimeSelectOnly}
         inline={props.inline}
+        showMonthDropdown={props.showMonthDropdown}
+        showYearDropdown={props.showYearDropdown}
+        dropdownMode={props.dropdownMode || "select"}
+        yearDropdownItemNumber={props.yearDropdownItemNumber || 100}
+        peekNextMonth={props.peekNextMonth !== false}
+        showPopperArrow={props.showPopperArrow !== false}
       />
     </>
   );

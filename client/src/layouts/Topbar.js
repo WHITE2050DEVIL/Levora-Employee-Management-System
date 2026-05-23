@@ -1,8 +1,9 @@
 // @flow
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import classNames from "classnames";
+import { Dropdown } from "react-bootstrap";
 
 // actions
 import { ChangeLeftSideBarType, SetTheme } from "../redux/slices/SettingSlice";
@@ -14,78 +15,18 @@ import ProfileDropdown from "../components/Ui/ProfileDropdown";
 import SearchDropdown from "../components/Ui/SearchDropdown";
 import TopbarSearch from "../components/Ui/TopbarSearch";
 import AppsDropdown from "../components/AppsDropdown/";
+import SummaryRequest from "../APIRequest/SummaryRequest";
 
 // images
 import avatar1 from "../assets/images/users/avatar-2.jpg";
-import avatar2 from "../assets/images/users/avatar-4.jpg";
 import logoSmDark from "../assets/images/logo_sm_dark.png";
 import logoSmLight from "../assets/images/logo_sm.png";
 import logo from "../assets/images/logo.png";
+import defaultAvatar from "../assets/images/users/avatar-1.jpg";
 
 //constants
 import * as layoutConstants from "../redux/slices/SettingSlice";
 
-// get the notifications
-const Notifications = [
-  {
-    day: "Today",
-    messages: [
-      {
-        id: 1,
-        title: "Datacorp",
-        subText: "Caleb Flakelar commented on Admin",
-        time: "1 min ago",
-        icon: "mdi mdi-comment-account-outline",
-        variant: "primary",
-        isRead: false,
-      },
-      {
-        id: 2,
-        title: "Admin",
-        subText: "New user registered.",
-        time: "1 hours ago",
-        icon: "mdi mdi-account-plus",
-        variant: "info",
-        isRead: true,
-      },
-    ],
-  },
-  {
-    day: "Yesterday",
-    messages: [
-      {
-        id: 1,
-        title: "Cristina Pride",
-        subText: "Hi, How are you? What about our next meeting",
-        time: "1 day ago",
-        avatar: avatar1,
-        isRead: true,
-      },
-    ],
-  },
-  {
-    day: "30 Dec 2021",
-    messages: [
-      {
-        id: 1,
-        title: "Datacorp",
-        subText: "Caleb Flakelar commented on Admin",
-        icon: "mdi mdi-comment-account-outline",
-        variant: "primary",
-        isRead: true,
-      },
-      {
-        id: 2,
-        title: "Karen Robinson",
-        subText: "Wow ! this admin looks good and awesome design",
-        avatar: avatar2,
-        isRead: true,
-      },
-    ],
-  },
-];
-
-// get the profilemenu
 const ProfileMenus = [
   {
     label: "My Account",
@@ -111,27 +52,110 @@ const Topbar = ({
   topbarDark,
 }) => {
   const dispatch = useDispatch();
-
   const [isopen, setIsopen] = useState(false);
+  const [clock, setClock] = useState(new Date());
+
   const { UserDetails } = useSelector((state) => state.User);
-
-  const navbarCssClasses = navCssClasses || "";
-  const containerCssClasses = !hideLogo ? "container-fluid" : "";
-
+  const { AccessToken } = useSelector((state) => state.Auth);
+  const { SummaryLists } = useSelector((state) => state.Summary);
+  const { LeaveLists } = useSelector((state) => state.Leave);
   const { LayoutType, LeftSideBarType, LayoutColor } = useSelector(
     (state) => state.Setting,
   );
 
-  /**
-   * Toggle the leftmenu when having mobile screen
-   */
+  const currentUser = Array.isArray(UserDetails) ? UserDetails[0] : UserDetails;
+  const userFullName = [currentUser?.FirstName, currentUser?.LastName]
+    .filter(Boolean)
+    .join(" ");
+  const username =
+    userFullName || currentUser?.FullName || currentUser?.Email || "Admin User";
+  const userTitle = currentUser?.Roles || "ADMIN";
+  const profilePic = currentUser?.Image || defaultAvatar;
+
+  const navbarCssClasses = navCssClasses || "";
+  const containerCssClasses = !hideLogo ? "container-fluid" : "";
+
+  useEffect(() => {
+    const timer = setInterval(() => setClock(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!AccessToken || !userTitle) return;
+
+    if (userTitle.toUpperCase() === "ADMIN") {
+      SummaryRequest.DashboardSummaryAdmin();
+    } else if (userTitle.toUpperCase() === "HOD") {
+      SummaryRequest.DashboardSummaryHod();
+    } else {
+      SummaryRequest.DashboardSummaryEmployee();
+    }
+  }, [AccessToken, userTitle]);
+
+  const notifications = useMemo(() => {
+    const getCount = (status) =>
+      SummaryLists?.find((summary) => summary?._id === status)?.count || 0;
+
+    const pendingCount = getCount("Pending");
+    const approvedCount = getCount("Approved");
+    const rejectedCount = getCount("Rejected");
+
+    const recentLeave = (LeaveLists || []).slice(0, 3).map((leave, index) => {
+      const employee = leave?.Employee?.[0];
+      const employeeName = [employee?.FirstName, employee?.LastName]
+        .filter(Boolean)
+        .join(" ");
+      return {
+        id: `leave-${leave?._id || index}`,
+        title: employeeName || "Leave request",
+        subText: `${leave?.LeaveType || "Leave"} - HOD: ${leave?.HodStatus || "Pending"}, Admin: ${leave?.AdminStatus || "Pending"}`,
+        time: "Recent",
+        avatar: employee?.Image || avatar1,
+        isRead: false,
+      };
+    });
+
+    return [
+      {
+        day: "Leave Activity",
+        messages: [
+          {
+            id: "pending-leave",
+            title: "Pending leave",
+            subText: `${pendingCount} request${pendingCount === 1 ? "" : "s"} require attention.`,
+            time: "Now",
+            icon: "mdi mdi-calendar-clock",
+            variant: pendingCount > 0 ? "warning" : "secondary",
+            isRead: pendingCount === 0,
+          },
+          {
+            id: "approved-leave",
+            title: "Approved leave",
+            subText: `${approvedCount} request${approvedCount === 1 ? "" : "s"} approved.`,
+            icon: "mdi mdi-check-circle-outline",
+            variant: "success",
+            isRead: true,
+          },
+          {
+            id: "rejected-leave",
+            title: "Rejected leave",
+            subText: `${rejectedCount} request${rejectedCount === 1 ? "" : "s"} rejected.`,
+            icon: "mdi mdi-close-circle-outline",
+            variant: rejectedCount > 0 ? "danger" : "secondary",
+            isRead: rejectedCount === 0,
+          },
+          ...recentLeave,
+        ],
+      },
+    ];
+  }, [LeaveLists, SummaryLists]);
+
   const handleLeftMenuCallBack = () => {
     setIsopen((prevState) => !prevState);
     if (openLeftMenuCallBack) openLeftMenuCallBack();
 
     switch (LayoutType) {
       case layoutConstants.LAYOUT_VERTICAL:
-        // condition added
         if (window.innerWidth >= 768) {
           if (LeftSideBarType === "fixed" || LeftSideBarType === "scrollable")
             dispatch(
@@ -158,7 +182,7 @@ const Topbar = ({
 
   return (
     <>
-      <div className={classNames("navbar-custom", navbarCssClasses)}>
+      <div className={classNames("navbar-custom hr-topbar", navbarCssClasses)}>
         <div className={containerCssClasses}>
           {!hideLogo && (
             <Link to="/" className="topnav-logo">
@@ -175,6 +199,31 @@ const Topbar = ({
             </Link>
           )}
 
+          <div className="hr-topbar-context d-none d-md-flex">
+            <span className="hr-topbar-time">
+              <i className="mdi mdi-clock-time-four-outline me-1"></i>
+              {clock.toLocaleDateString()}{" "}
+              {clock.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+            <Dropdown>
+              <Dropdown.Toggle variant="light" size="sm">
+                <i className="mdi mdi-plus-circle-outline me-1"></i>
+                Quick Create
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item as={Link} to="/employee/employee-create-update">
+                  New Employee
+                </Dropdown.Item>
+                <Dropdown.Item as={Link} to="/department/department-create-update">
+                  New Department
+                </Dropdown.Item>
+                <Dropdown.Item as={Link} to="/leave/leave-create-update">
+                  New Leave Request
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+
           <ul className="list-unstyled topbar-menu float-end mb-0">
             <li className="notification-list topbar-dropdown d-xl-none">
               <SearchDropdown />
@@ -183,7 +232,7 @@ const Topbar = ({
               <LanguageDropdown />
             </li>
             <li className="dropdown notification-list">
-              <NotificationDropdown notifications={Notifications} />
+              <NotificationDropdown notifications={notifications} />
             </li>
             <li className="dropdown notification-list d-none d-sm-inline-block">
               <AppsDropdown />
@@ -207,14 +256,14 @@ const Topbar = ({
             </li>
             <li className="dropdown notification-list">
               <ProfileDropdown
-                profilePic={UserDetails?.Image}
+                profilePic={profilePic}
                 menuItems={ProfileMenus}
-                username={UserDetails?.FirstName + " " + UserDetails?.LastName}
-                userTitle={UserDetails?.Roles}
+                username={username}
+                userTitle={userTitle}
               />
             </li>
           </ul>
-          {/* toggle for vertical layout */}
+
           {(LayoutType === layoutConstants.LAYOUT_VERTICAL ||
             LayoutType === layoutConstants.LAYOUT_FULL) && (
             <button
@@ -225,7 +274,6 @@ const Topbar = ({
             </button>
           )}
 
-          {/* toggle for horizontal layout */}
           {LayoutType === layoutConstants.LAYOUT_HORIZONTAL && (
             <Link
               to="#"
@@ -240,7 +288,6 @@ const Topbar = ({
             </Link>
           )}
 
-          {/* toggle for detached layout */}
           {LayoutType === layoutConstants.LAYOUT_DETACHED && (
             <Link
               to="#"

@@ -108,6 +108,18 @@ const LeaveAdminListPage = ({ status }) => {
     });
   };
 
+  const handleHodDecision = async (id, decision) => {
+    const payload = {
+      HodStatus: decision,
+      HodRemark: `Updated by HOD from ${pageLabel}`,
+    };
+
+    const result = await LeaveRequest.LeaveUpdate(id, payload);
+    if (result) {
+      fetchLeaves();
+    }
+  };
+
   return (
     <>
       <PageTitle
@@ -170,16 +182,16 @@ const LeaveAdminListPage = ({ status }) => {
 
               <Row>
                 <Col>
-                  <Table className="table-centered react-table" responsive>
+                  <Table className="table-centered react-table mb-0" style={{ tableLayout: "fixed", width: "100%" }}>
                     <thead className="table-light">
                       <tr>
-                        <th>Employee</th>
-                        <th>Leave Type</th>
-                        <th>Application Date</th>
-                        <th>Total Days</th>
-                        <th>HOD Status</th>
-                        <th>Admin Status</th>
-                        <th>Action</th>
+                        <th style={{ width: "28%" }}>Employee</th>
+                        <th style={{ width: "14%" }}>Leave Type</th>
+                        <th style={{ width: "14%" }}>Applied</th>
+                        <th style={{ width: "8%" }}>Days</th>
+                        <th style={{ width: "12%" }}>HOD</th>
+                        <th style={{ width: "12%" }}>Admin</th>
+                        <th style={{ width: "12%" }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -191,23 +203,30 @@ const LeaveAdminListPage = ({ status }) => {
                                 <div>
                                   <img
                                     src={record?.Employee?.[0]?.Image || "https://via.placeholder.com/150"}
-                                    className="avatar avatar-sm me-3"
-                                    style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }}
-                                    alt="user"
+                                    className="avatar avatar-sm me-2"
+                                    style={{
+                                      width: "38px",
+                                      height: "38px",
+                                      minWidth: "38px",
+                                      borderRadius: "50%",
+                                      objectFit: "cover",
+                                      border: "1px solid #d8e0ea",
+                                    }}
+                                    alt="employee avatar"
                                   />
                                 </div>
-                                <div className="d-flex flex-column justify-content-center">
-                                  <h6 className="mb-0 text-sm">
+                                <div className="d-flex flex-column justify-content-center text-truncate">
+                                  <h6 className="mb-0 text-sm text-truncate">
                                     {`${record?.Employee?.[0]?.FirstName || "Unknown"} ${record?.Employee?.[0]?.LastName || ""}`}
                                   </h6>
-                                  <span className="text-xs text-secondary">
+                                  <span className="text-xs text-secondary text-truncate">
                                     {record?.Employee?.[0]?.Email || "No Email Linked"}
                                   </span>
                                 </div>
                               </div>
                             </td>
 
-                            <td>{record?.LeaveType}</td>
+                            <td className="text-truncate">{record?.LeaveType}</td>
                             <td>{DateFormatter(record?.createdAt)}</td>
                             <td>{record?.NumOfDay || 0}</td>
                             <td>
@@ -233,13 +252,34 @@ const LeaveAdminListPage = ({ status }) => {
                               </span>
                             </td>
                             <td>
-                              <Link
-                                to={`/leave/leave-create-update?id=${record?._id}`}
-                                className="action-icon text-warning me-2"
-                                aria-label="Edit leave"
-                              >
-                                <i className="mdi mdi-square-edit-outline" style={{ fontSize: "1.2rem" }}></i>
-                              </Link>
+                              {isHod && record?.HodStatus === "Pending" ? (
+                                <div className="d-flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="success"
+                                    className="px-2 py-1"
+                                    onClick={() => handleHodDecision(record?._id, "Approved")}
+                                  >
+                                    Ok
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="danger"
+                                    className="px-2 py-1"
+                                    onClick={() => handleHodDecision(record?._id, "Rejected")}
+                                  >
+                                    No
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Link
+                                  to={`/leave/leave-create-update?id=${record?._id}`}
+                                  className="action-icon text-warning me-2"
+                                  aria-label="Edit leave"
+                                >
+                                  <i className="mdi mdi-square-edit-outline" style={{ fontSize: "1.2rem" }}></i>
+                                </Link>
+                              )}
                               <span
                                 className="action-icon text-danger"
                                 style={{ cursor: "pointer" }}
