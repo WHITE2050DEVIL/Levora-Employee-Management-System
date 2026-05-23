@@ -11,15 +11,17 @@ const DepartmentHead = ({ departmentHeadsList }) => {
 
         <Table hover responsive className="table-centered table-nowrap mb-0">
           <tbody>
-            {departmentHeadsList?.map((i) => (
-              <tr>
+            {departmentHeadsList?.length ? departmentHeadsList.map((i) => (
+              <tr key={i?._id || i?.Email}>
                 <td>
                   <div className="d-flex align-items-start">
                     <img
                       className="me-2 rounded-circle"
-                      src={i?.Image}
+                      src={i?.Image || "https://via.placeholder.com/150"}
                       width="40"
-                      alt=""
+                      height="40"
+                      style={{ objectFit: "cover" }}
+                      alt="department head"
                     />
                     <div>
                       <h5 className="mt-0 mb-1">
@@ -31,7 +33,13 @@ const DepartmentHead = ({ departmentHeadsList }) => {
                   </div>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td className="text-muted py-4 text-center">
+                  No department heads are available yet.
+                </td>
+              </tr>
+            )}
           </tbody>
         </Table>
       </Card.Body>

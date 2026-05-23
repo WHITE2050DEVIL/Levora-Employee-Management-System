@@ -6,6 +6,7 @@ import App from "./App";
 import store from "./redux/store/store";
 
 import "./assets/scss/Creative.scss";
+import "./assets/scss/modern-hr.scss";
 import "./locales/i18n";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

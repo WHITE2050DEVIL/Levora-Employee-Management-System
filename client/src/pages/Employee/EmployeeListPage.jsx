@@ -1,5 +1,5 @@
 // External Lib Import
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Row, Col, Card, Table, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ReactPaginate from "react-paginate";
@@ -19,16 +19,44 @@ const EmployeeListPage = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [perPage, setPerPage] = useState(5);
   const [searchKey, setSearchKey] = useState("0");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [departmentFilter, setDepartmentFilter] = useState("ALL");
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // Hook into the global Redux employee data slice
   const { EmployeeLists, TotalEmployee } = useSelector((state) => state.Employee);
 
   useEffect(() => {
     EmployeeRequest.EmployeeList(pageNumber, perPage, searchKey);
   }, [pageNumber, perPage, searchKey]);
 
-  // Safely calculate total pages to prevent NaN or divide-by-zero crashes
+  const filteredEmployees = useMemo(() => {
+    return (EmployeeLists || []).filter((employee) => {
+      const roleMatches =
+        roleFilter === "ALL" || (employee?.Roles || "STAFF") === roleFilter;
+      const departmentMatches =
+        departmentFilter === "ALL" ||
+        (employee?.Department || "Unassigned") === departmentFilter;
+
+      return roleMatches && departmentMatches;
+    });
+  }, [EmployeeLists, roleFilter, departmentFilter]);
+
+  const departmentOptions = useMemo(() => {
+    const departments = (EmployeeLists || [])
+      .map((employee) => employee?.Department || "Unassigned")
+      .filter(Boolean);
+
+    return ["ALL", ...Array.from(new Set(departments))];
+  }, [EmployeeLists]);
+
+  const selectedEmployees = useMemo(() => {
+    return filteredEmployees.filter((employee) => selectedIds.includes(employee?._id));
+  }, [filteredEmployees, selectedIds]);
+
   const totalPages = TotalEmployee > 0 ? Math.ceil(TotalEmployee / perPage) : 1;
+  const visibleIds = filteredEmployees.map((employee) => employee?._id).filter(Boolean);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.includes(id));
 
   const PerPageOnChange = (e) => {
     if (e.target.value === "All") {
@@ -37,23 +65,58 @@ const EmployeeListPage = () => {
       setPerPage(parseInt(e.target.value, 10));
     }
     setPageNumber(1);
+    setSelectedIds([]);
   };
 
   const SearchKeywordOnChange = (e) => {
     const key = e.target.value || "0";
     setSearchKey(key);
     setPageNumber(1);
+    setSelectedIds([]);
   };
 
   const HandlePageClick = (e) => {
     setPageNumber(e.selected + 1);
+    setSelectedIds([]);
   };
 
   const GoToPage = (e) => {
     const pageNo = parseInt(e.target.value, 10);
     if (pageNo >= 1 && pageNo <= totalPages) {
       setPageNumber(pageNo);
+      setSelectedIds([]);
     }
+  };
+
+  const ToggleAllVisible = (event) => {
+    if (event.target.checked) {
+      setSelectedIds((previousIds) =>
+        Array.from(new Set([...previousIds, ...visibleIds]))
+      );
+      return;
+    }
+
+    setSelectedIds((previousIds) =>
+      previousIds.filter((id) => !visibleIds.includes(id))
+    );
+  };
+
+  const ToggleSelected = (id) => {
+    if (!id) return;
+
+    setSelectedIds((previousIds) =>
+      previousIds.includes(id)
+        ? previousIds.filter((selectedId) => selectedId !== id)
+        : [...previousIds, id]
+    );
+  };
+
+  const ClearFilters = () => {
+    setRoleFilter("ALL");
+    setDepartmentFilter("ALL");
+    setSearchKey("0");
+    setSelectedIds([]);
+    setPageNumber(1);
   };
 
   const DeleteEmployee = (id) => {
@@ -63,6 +126,8 @@ const EmployeeListPage = () => {
       }
     });
   };
+
+  const exportRows = selectedEmployees.length ? selectedEmployees : filteredEmployees;
 
   return (
     <>
@@ -80,81 +145,129 @@ const EmployeeListPage = () => {
 
       <Row>
         <Col xs={12}>
-          <Card>
+          <Card className="hr-list-card">
             <Card.Body>
-              {/* MANAGEMENT OPERATIONS BAR */}
-              <Row className="mb-2">
-                <Col sm={5}>
-                  <Link to="/employee/employee-create-update" className="btn btn-danger mb-2">
-                    <i className="mdi mdi-plus-circle me-2"></i> Add Employee
-                  </Link>
-                </Col>
-
-                <Col sm={7}>
-                  <div className="text-sm-end">
-                    <Button variant="success" className="mb-2 me-1">
-                      <i className="mdi mdi-cog-outline"></i>
-                    </Button>
-
-                    <Button
-                      variant="light"
-                      className="mb-2 me-1"
-                      onClick={() => ExportDataJSON(EmployeeLists || [], "Employee_Directory", "xls")}
-                    >
-                      <SiMicrosoftexcel /> Export Excel
-                    </Button>
-
-                    <Button
-                      variant="light"
-                      className="mb-2"
-                      onClick={() => ExportDataJSON(EmployeeLists || [], "Employee_Directory", "csv")}
-                    >
-                      <GrDocumentCsv /> Export CSV
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* LIVE RECORDFILTER BAR */}
-              <Row className="mb-3">
-                <Col>
-                  <div className="d-flex align-items-center">
-                    <span className="d-flex align-items-center">
-                      Search :
-                      <input
-                        placeholder={`${TotalEmployee || 0} records...`}
-                        className="form-control w-auto ms-2"
-                        onChange={SearchKeywordOnChange}
-                      />
+              <div className="hr-list-header">
+                <div>
+                  <h4>People Operations</h4>
+                  <p>
+                    Manage employee accounts, roles, departments, exports, and quick selections.
+                  </p>
+                </div>
+                <div className="hr-directory-actions">
+                  {selectedIds.length > 0 && (
+                    <span className="hr-selected-pill">
+                      {selectedIds.length} selected
                     </span>
-                  </div>
-                </Col>
-              </Row>
+                  )}
+                  <Link to="/employee/employee-create-update" className="btn btn-primary">
+                    <i className="mdi mdi-plus-circle me-1"></i> Add Employee
+                  </Link>
+                  <Button
+                    variant="light"
+                    onClick={() => ExportDataJSON(exportRows, "Employee_Directory", "xls")}
+                  >
+                    <SiMicrosoftexcel className="me-1" /> Excel
+                  </Button>
+                  <Button
+                    variant="light"
+                    onClick={() => ExportDataJSON(exportRows, "Employee_Directory", "csv")}
+                  >
+                    <GrDocumentCsv className="me-1" /> CSV
+                  </Button>
+                </div>
+              </div>
 
-              {/* DATA TABLE MATRIX */}
+              <div className="hr-filter-grid">
+                <div className="hr-filter-field">
+                  <label>Search</label>
+                  <input
+                    placeholder={`${TotalEmployee || 0} records...`}
+                    className="form-control"
+                    onChange={SearchKeywordOnChange}
+                  />
+                </div>
+                <div className="hr-filter-field">
+                  <label>Role</label>
+                  <select
+                    className="form-select"
+                    value={roleFilter}
+                    onChange={(event) => {
+                      setRoleFilter(event.target.value);
+                      setSelectedIds([]);
+                    }}
+                  >
+                    <option value="ALL">All roles</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="HOD">Department Head</option>
+                    <option value="STAFF">Staff</option>
+                  </select>
+                </div>
+                <div className="hr-filter-field">
+                  <label>Department</label>
+                  <select
+                    className="form-select"
+                    value={departmentFilter}
+                    onChange={(event) => {
+                      setDepartmentFilter(event.target.value);
+                      setSelectedIds([]);
+                    }}
+                  >
+                    {departmentOptions.map((department) => (
+                      <option value={department} key={department}>
+                        {department === "ALL" ? "All departments" : department}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="hr-filter-field d-flex align-items-end">
+                  <Button variant="light" className="w-100" onClick={ClearFilters}>
+                    <i className="mdi mdi-filter-remove-outline me-1"></i>
+                    Reset
+                  </Button>
+                </div>
+              </div>
+
               <Row>
                 <Col>
                   <Table className="table-centered react-table" responsive>
-                    <thead className="table-light" style={{ backgroundColor: "#eef2f7" }}>
+                    <thead className="table-light">
                       <tr>
+                        <th style={{ width: "42px" }}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={allVisibleSelected}
+                            onChange={ToggleAllVisible}
+                            aria-label="Select all visible employees"
+                          />
+                        </th>
                         <th>Employee</th>
                         <th>Mobile</th>
                         <th>Address</th>
+                        <th>Department</th>
                         <th>System Role</th>
                         <th>Created On</th>
                         <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {EmployeeLists && EmployeeLists.length > 0 ? (
-                        EmployeeLists.map((record, index) => (
-                          // 👇 FIXED: Swapped index keys with absolute item IDs to secure row updates
+                      {filteredEmployees && filteredEmployees.length > 0 ? (
+                        filteredEmployees.map((record, index) => (
                           <tr key={record?._id || index}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={selectedIds.includes(record?._id)}
+                                onChange={() => ToggleSelected(record?._id)}
+                                aria-label={`Select ${record?.FirstName || "employee"}`}
+                              />
+                            </td>
                             <td>
                               <div className="d-flex px-2 py-1">
                                 <div>
                                   <img
-                                    // 👇 FIXED: Added an explicit default avatar guard if no profile image exists
                                     src={record?.Image || "https://via.placeholder.com/150"}
                                     className="avatar avatar-sm me-3 rounded-circle img-thumbnail"
                                     style={{ width: "40px", height: "40px", objectFit: "cover" }}
@@ -176,12 +289,14 @@ const EmployeeListPage = () => {
                             <td className="text-truncate" style={{ maxWidth: "200px" }}>
                               {record?.Address || "NA"}
                             </td>
+                            <td>{record?.Department || "Unassigned"}</td>
                             <td>
                               <span
                                 className={classNames("badge px-2 py-1 rounded-pill", {
                                   "bg-danger-lighten text-danger": record?.Roles === "ADMIN",
                                   "bg-primary-lighten text-primary": record?.Roles === "HOD",
-                                  "bg-success-lighten text-success": record?.Roles === "STAFF" || !record?.Roles,
+                                  "bg-success-lighten text-success":
+                                    record?.Roles === "STAFF" || !record?.Roles,
                                 })}
                               >
                                 {record?.Roles || "STAFF"}
@@ -192,6 +307,7 @@ const EmployeeListPage = () => {
                               <Link
                                 to={`/employee/employee-create-update?id=${record?._id}`}
                                 className="action-icon text-warning me-2"
+                                aria-label="Edit employee"
                               >
                                 <i className="mdi mdi-square-edit-outline" style={{ fontSize: "1.1rem" }}></i>
                               </Link>
@@ -199,6 +315,8 @@ const EmployeeListPage = () => {
                                 className="action-icon text-danger"
                                 style={{ cursor: "pointer" }}
                                 onClick={() => DeleteEmployee(record?._id)}
+                                role="button"
+                                aria-label="Delete employee"
                               >
                                 <i className="mdi mdi-delete" style={{ fontSize: "1.1rem" }}></i>
                               </span>
@@ -207,8 +325,11 @@ const EmployeeListPage = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="text-center py-4 text-muted">
-                            No employee accounts match your current directory criteria.
+                          <td colSpan={8}>
+                            <div className="hr-empty-state">
+                              <i className="mdi mdi-account-search-outline"></i>
+                              No employee accounts match your current directory criteria.
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -217,7 +338,6 @@ const EmployeeListPage = () => {
                 </Col>
               </Row>
 
-              {/* DATA PAGINATION VIEW CONTROL PANEL */}
               <Row className="mt-3">
                 <Col>
                   <div className="d-lg-flex align-items-center text-center pb-1">
@@ -246,7 +366,6 @@ const EmployeeListPage = () => {
                         min={1}
                         max={totalPages}
                         className="form-control w-25 ms-1 d-inline-block"
-                        // 👇 FIXED: Changed from uncontrolled defaultValue to controlled input
                         value={pageNumber}
                         onChange={GoToPage}
                       />
@@ -275,7 +394,6 @@ const EmployeeListPage = () => {
                   </div>
                 </Col>
               </Row>
-
             </Card.Body>
           </Card>
         </Col>

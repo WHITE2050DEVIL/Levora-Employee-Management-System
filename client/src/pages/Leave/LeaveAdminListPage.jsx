@@ -1,5 +1,5 @@
 // External Import
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Row, Col, Card, Table, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ReactPaginate from "react-paginate";
@@ -15,31 +15,79 @@ import AleartMessage from "../../helpers/AleartMessage";
 import ExportDataJSON from "../../utils/ExportFromJSON";
 import DateFormatter from "../../utils/DateFormatter";
 
-const LeaveAdminListPage = () => {
+const getCurrentUser = (userDetails) =>
+  Array.isArray(userDetails) ? userDetails[0] : userDetails;
+
+const LeaveAdminListPage = ({ status }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [perPage, setPerPage] = useState(5);
   const [searchKey, setSearchKey] = useState(0);
 
-  // Direct state sync tracking from global Redux leave slice
   const { LeaveLists, TotalLeave } = useSelector((state) => state.Leave);
+  const { UserDetails } = useSelector((state) => state.User);
+  const userRole = getCurrentUser(UserDetails)?.Roles?.toUpperCase();
+
+  const isAdmin = userRole === "ADMIN";
+  const isHod = userRole === "HOD";
+  const pageLabel = status ? `${status} Leave` : "Leave List";
+
+  const fetchLeaves = async () => {
+    if (!status) {
+      if (isAdmin) {
+        await LeaveRequest.LeaveAdminList(pageNumber, perPage, searchKey);
+        return;
+      }
+
+      await LeaveRequest.LeaveList(pageNumber, perPage, searchKey);
+      return;
+    }
+
+    if (isAdmin) {
+      await LeaveRequest.LeaveListAdminByStatus(pageNumber, perPage, searchKey, {
+        status,
+      });
+      return;
+    }
+
+    if (isHod) {
+      await LeaveRequest.LeaveListHodByStatus(pageNumber, perPage, searchKey, {
+        status,
+      });
+      return;
+    }
+
+    await LeaveRequest.LeaveList(pageNumber, perPage, searchKey);
+  };
 
   useEffect(() => {
-    LeaveRequest.LeaveAdminList(pageNumber, perPage, searchKey);
-  }, [pageNumber, perPage, searchKey]);
+    fetchLeaves();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageNumber, perPage, searchKey, status, userRole]);
+
+  const visibleLeaves = useMemo(() => {
+    if (!status || isAdmin || isHod) return LeaveLists || [];
+
+    return (LeaveLists || []).filter(
+      (record) => record?.AdminStatus === status || record?.HodStatus === status
+    );
+  }, [LeaveLists, isAdmin, isHod, status]);
+
+  const displayTotal = status && !isAdmin && !isHod ? visibleLeaves.length : TotalLeave || 0;
+  const calculatedPageCount = Math.max(Math.ceil((displayTotal || 0) / perPage), 1);
 
   const PerPageOnChange = (e) => {
     if (e.target.value === "All") {
-      setPerPage(TotalLeave || 1);
+      setPerPage(displayTotal || 1);
     } else {
       setPerPage(Number(e.target.value));
     }
-    setPageNumber(1); // Reset to page 1 on display count change
+    setPageNumber(1);
   };
 
   const SearchKeywordOnChange = (e) => {
     const key = e.target.value || 0;
     setSearchKey(key);
-    setPageNumber(1); // Reset to page 1 when searching
+    setPageNumber(1);
   };
 
   const HandlePageClick = (e) => {
@@ -48,22 +96,16 @@ const LeaveAdminListPage = () => {
 
   const GoToPage = (e) => {
     const targetPage = Number(e.target.value);
-    const maxPage = Math.ceil((TotalLeave || 0) / perPage) || 1;
-    if (targetPage >= 1 && targetPage <= maxPage) {
+    if (targetPage >= 1 && targetPage <= calculatedPageCount) {
       setPageNumber(targetPage);
     }
   };
 
   const DeleteLeave = (id) => {
     AleartMessage.Delete(id, LeaveRequest.LeaveDelete).then((result) => {
-      if (result) {
-        LeaveRequest.LeaveAdminList(pageNumber, perPage, searchKey);
-      }
+      if (result) fetchLeaves();
     });
   };
-
-  // Safe Math calculation to protect ReactPaginate from floating decimals or NaN
-  const calculatedPageCount = Math.ceil((TotalLeave || 0) / perPage) || 1;
 
   return (
     <>
@@ -71,65 +113,64 @@ const LeaveAdminListPage = () => {
         breadCrumbItems={[
           { label: "Leave", path: "/leave/leave-list" },
           {
-            label: "Admin List",
+            label: pageLabel,
             path: "/leave/leave-list",
             active: true,
           },
         ]}
-        title={`Leave Administration (${TotalLeave || 0} Records)`}
+        title={`${pageLabel} (${displayTotal} Records)`}
       />
-      
+
       <Row>
         <Col xs={12}>
-          <Card>
+          <Card className="hr-list-card">
             <Card.Body>
-              {/* TOP ACTION BAR */}
-              <Row className="mb-2">
-                <Col sm={5}></Col>
-                <Col sm={7}>
-                  <div className="text-sm-end">
-                    <Button variant="success" className="mb-2 me-1">
-                      <i className="mdi mdi-cog-outline"></i>
-                    </Button>
+              <div className="hr-list-header">
+                <div>
+                  <h4>{pageLabel}</h4>
+                  <p>
+                    Review leave applications by employee, status, date, and approval flow.
+                  </p>
+                </div>
+                <div className="hr-directory-actions">
+                  <Button
+                    variant="light"
+                    onClick={() => ExportDataJSON(visibleLeaves, "Leave_Report", "xls")}
+                  >
+                    <SiMicrosoftexcel className="me-1" /> Excel
+                  </Button>
+                  <Button
+                    variant="light"
+                    onClick={() => ExportDataJSON(visibleLeaves, "Leave_Report", "csv")}
+                  >
+                    <GrDocumentCsv className="me-1" /> CSV
+                  </Button>
+                </div>
+              </div>
 
-                    <Button
-                      variant="light"
-                      className="mb-2 me-1"
-                      onClick={() => ExportDataJSON(LeaveLists || [], "Leave_Report", "xls")}
-                    >
-                      <SiMicrosoftexcel /> Export Excel
-                    </Button>
+              <div className="hr-filter-grid">
+                <div className="hr-filter-field">
+                  <label>Search</label>
+                  <input
+                    placeholder={`${displayTotal} records...`}
+                    className="form-control"
+                    onChange={SearchKeywordOnChange}
+                  />
+                </div>
+                <div className="hr-filter-field">
+                  <label>Status View</label>
+                  <input
+                    className="form-control"
+                    value={status || "All approved HOD leave"}
+                    readOnly
+                  />
+                </div>
+              </div>
 
-                    <Button
-                      variant="light"
-                      className="mb-2"
-                      onClick={() => ExportDataJSON(LeaveLists || [], "Leave_Report", "csv")}
-                    >
-                      <GrDocumentCsv /> Export CSV
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* FILTER / SEARCH INPUT */}
-              <Row className="mb-3">
-                <Col>
-                  <div className="d-flex align-items-center">
-                    <label className="mb-0 me-2">Search:</label>
-                    <input
-                      placeholder={`${TotalLeave || 0} records...`}
-                      className="form-control w-auto"
-                      onChange={SearchKeywordOnChange}
-                    />
-                  </div>
-                </Col>
-              </Row>
-
-              {/* DATA RENDER GRID */}
               <Row>
                 <Col>
                   <Table className="table-centered react-table" responsive>
-                    <thead className="table-light" style={{ backgroundColor: "#eef2f7" }}>
+                    <thead className="table-light">
                       <tr>
                         <th>Employee</th>
                         <th>Leave Type</th>
@@ -141,8 +182,8 @@ const LeaveAdminListPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {LeaveLists && LeaveLists.length > 0 ? (
-                        LeaveLists.map((record, index) => (
+                      {visibleLeaves.length > 0 ? (
+                        visibleLeaves.map((record, index) => (
                           <tr key={record?._id || index}>
                             <td>
                               <div className="d-flex px-2 py-1">
@@ -150,7 +191,7 @@ const LeaveAdminListPage = () => {
                                   <img
                                     src={record?.Employee?.[0]?.Image || "https://via.placeholder.com/150"}
                                     className="avatar avatar-sm me-3"
-                                    style={{ width: "40px", height: "40px", borderRadius: "50%" }}
+                                    style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }}
                                     alt="user"
                                   />
                                 </div>
@@ -158,7 +199,6 @@ const LeaveAdminListPage = () => {
                                   <h6 className="mb-0 text-sm">
                                     {`${record?.Employee?.[0]?.FirstName || "Unknown"} ${record?.Employee?.[0]?.LastName || ""}`}
                                   </h6>
-                                  {/* FIXED: Removed internal nested <td> wrapper to clean up rendering tree output */}
                                   <span className="text-xs text-secondary">
                                     {record?.Employee?.[0]?.Email || "No Email Linked"}
                                   </span>
@@ -195,6 +235,7 @@ const LeaveAdminListPage = () => {
                               <Link
                                 to={`/leave/leave-create-update?id=${record?._id}`}
                                 className="action-icon text-warning me-2"
+                                aria-label="Edit leave"
                               >
                                 <i className="mdi mdi-square-edit-outline" style={{ fontSize: "1.2rem" }}></i>
                               </Link>
@@ -202,6 +243,8 @@ const LeaveAdminListPage = () => {
                                 className="action-icon text-danger"
                                 style={{ cursor: "pointer" }}
                                 onClick={() => DeleteLeave(record?._id)}
+                                role="button"
+                                aria-label="Delete leave"
                               >
                                 <i className="mdi mdi-delete" style={{ fontSize: "1.2rem" }}></i>
                               </span>
@@ -210,8 +253,11 @@ const LeaveAdminListPage = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={7} className="text-center py-4 text-muted">
-                            No leave applications found matching your criteria.
+                          <td colSpan={7}>
+                            <div className="hr-empty-state">
+                              <i className="mdi mdi-calendar-search"></i>
+                              No leave applications found for this view.
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -220,7 +266,6 @@ const LeaveAdminListPage = () => {
                 </Col>
               </Row>
 
-              {/* PAGINATION PANEL FOOTER */}
               <Row className="mt-3">
                 <Col>
                   <div className="d-lg-flex align-items-center text-center pb-1">
@@ -228,7 +273,7 @@ const LeaveAdminListPage = () => {
                       <label className="me-1">Display:</label>
                       <select
                         className="form-select d-inline-block w-auto"
-                        value={perPage}
+                        value={perPage === displayTotal ? "All" : perPage}
                         onChange={PerPageOnChange}
                       >
                         <option value={5}>5</option>
@@ -237,7 +282,7 @@ const LeaveAdminListPage = () => {
                         <option value="All">All</option>
                       </select>
                     </div>
-                    
+
                     <span className="me-3 d-inline-block mb-2 mb-lg-0">
                       Page <strong>{pageNumber} of {calculatedPageCount}</strong>
                     </span>
@@ -277,7 +322,6 @@ const LeaveAdminListPage = () => {
                   </div>
                 </Col>
               </Row>
-
             </Card.Body>
           </Card>
         </Col>

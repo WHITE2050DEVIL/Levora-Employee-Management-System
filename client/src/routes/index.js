@@ -40,7 +40,7 @@ const ProfilePage = React.lazy(() => import("../pages/Profile/ProfilePage"));
 const ChangePasswordPage = React.lazy(() => import("../pages/Profile/ChangePasswordPage"));
 
 // Suspense Fallback Loader wrapper
-const LoadComponent = ({ component: Component }) => {
+const LoadComponent = ({ component: Component, ...props }) => {
   useEffect(() => { 
     window.scrollTo(0, 0); 
   }, []);
@@ -51,7 +51,7 @@ const LoadComponent = ({ component: Component }) => {
         <div className="spinner-border text-primary" role="status"></div>
       </div>
     }>
-      <Component />
+      <Component {...props} />
     </Suspense>
   );
 };
@@ -117,9 +117,9 @@ const AllRoutes = () => {
             userRole === "ADMIN" ? <LoadComponent component={LeaveAdminUpdatePage} /> : <LoadComponent component={LeaveCreateUpdatePage} />
         } />
 
-        <Route path="leave/leave-list-pending" element={<LoadComponent component={LeaveListPage} />} />
-        <Route path="leave/leave-list-approved" element={<LoadComponent component={LeaveListPage} />} />
-        <Route path="leave/leave-list-rejected" element={<LoadComponent component={LeaveListPage} />} />
+        <Route path="leave/leave-list-pending" element={<LoadComponent component={LeaveListPage} status="Pending" />} />
+        <Route path="leave/leave-list-approved" element={<LoadComponent component={LeaveListPage} status="Approved" />} />
+        <Route path="leave/leave-list-rejected" element={<LoadComponent component={LeaveListPage} status="Rejected" />} />
 
         {/* SHARED PROFILES */}
         <Route path="account/profile" element={<LoadComponent component={ProfilePage} />} />
