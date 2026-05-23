@@ -30,6 +30,7 @@ const LeaveAdminListPage = ({ status }) => {
   const isAdmin = userRole === "ADMIN";
   const isHod = userRole === "HOD";
   const pageLabel = status ? `${status} Leave` : "Leave List";
+  const statusViewLabel = status || (isAdmin ? "HOD approved leave" : "All leave");
 
   const fetchLeaves = async () => {
     if (!status) {
@@ -161,7 +162,7 @@ const LeaveAdminListPage = ({ status }) => {
                   <label>Status View</label>
                   <input
                     className="form-control"
-                    value={status || "All approved HOD leave"}
+                    value={statusViewLabel}
                     readOnly
                   />
                 </div>
