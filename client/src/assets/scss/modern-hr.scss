@@ -63,6 +63,58 @@ body {
   max-width: 1480px;
 }
 
+.levora-brand {
+  align-items: center;
+  color: inherit;
+  display: inline-flex;
+  gap: 12px;
+  text-align: left;
+}
+
+.levora-brand.compact {
+  justify-content: center;
+}
+
+.levora-brand-mark {
+  align-items: center;
+  background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.2);
+  color: #fff;
+  display: inline-flex;
+  flex: 0 0 42px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.levora-brand.compact .levora-brand-mark {
+  flex-basis: 36px;
+  height: 36px;
+  width: 36px;
+}
+
+.levora-brand-copy {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.levora-brand-name {
+  color: var(--hr-ink);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.levora-brand-tagline {
+  color: var(--hr-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
 .navbar-custom,
 .leftside-menu,
 .card {
@@ -89,7 +141,15 @@ body {
   display: flex !important;
   height: var(--hr-topbar-height);
   justify-content: center;
-  padding: 0 12px !important;
+  padding: 0 16px !important;
+}
+
+.leftside-menu .logo .levora-brand {
+  width: 100%;
+}
+
+.leftside-menu .logo .levora-brand.compact {
+  width: auto;
 }
 
 .card {
@@ -485,9 +545,19 @@ body.authentication-bg {
   border: 0;
 }
 
+.hr-auth-card .card-header .levora-brand {
+  color: #fff;
+  justify-content: center;
+}
+
+.hr-auth-card .card-header .levora-brand-name,
+.hr-auth-card .card-header .levora-brand-tagline {
+  color: #fff;
+}
+
 .hr-auth-card .card-header {
-  background: var(--hr-panel) !important;
-  border-bottom: 1px solid var(--hr-line);
+  background: linear-gradient(135deg, #0f172a 0%, #0f766e 42%, #2563eb 100%) !important;
+  border-bottom: 0;
 }
 
 .hr-form-card .card-body {
@@ -567,6 +637,26 @@ body.authentication-bg {
   align-items: center;
   gap: 10px;
   margin-left: 18px;
+}
+
+.hr-topbar-brand .levora-brand-name {
+  font-size: 0.95rem;
+}
+
+.hr-topbar-brand-inline {
+  align-items: center;
+  border-right: 1px solid var(--hr-line);
+  display: inline-flex;
+  margin-right: 2px;
+  padding-right: 12px;
+}
+
+.hr-topbar-brand-label {
+  color: var(--hr-ink);
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .hr-topbar-time {

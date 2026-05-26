@@ -2,15 +2,19 @@ import React, { useEffect } from "react";
 import { Card, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-// images
-import Logo from "../../assets/images/logo.png";
+import {
+  BRAND_DESCRIPTION,
+  BRAND_NAME,
+  BRAND_TAGLINE,
+} from "../../constants/brand";
+import LevoraBrand from "../../components/Brand/LevoraBrand";
 
 const AccountLayout = ({ bottomLinks, children }) => {
   const { t } = useTranslation();
 
   useEffect(() => {
     if (document.body) document.body.classList.add("authentication-bg");
+    document.title = `${BRAND_NAME} | ${BRAND_TAGLINE}`;
 
     return () => {
       if (document.body) document.body.classList.remove("authentication-bg");
@@ -23,11 +27,10 @@ const AccountLayout = ({ bottomLinks, children }) => {
         <Container>
           <div className="hr-auth-shell">
             <div className="hr-auth-copy">
-              <h1>{t("Run every HR workflow from one modern workspace.")}</h1>
+              <h1>{t(BRAND_NAME)}</h1>
+              <p className="text-uppercase fw-bold mb-2">{t(BRAND_TAGLINE)}</p>
               <p>
-                {t(
-                  "Manage staff records, departments, leave approvals, and account access with a cleaner employee management system."
-                )}
+                {t(BRAND_DESCRIPTION)}
               </p>
               <div className="hr-auth-points">
                 <span>
@@ -49,9 +52,7 @@ const AccountLayout = ({ bottomLinks, children }) => {
               <Card>
                 <Card.Header className="pt-4 pb-4 text-center bg-primary">
                   <Link to="/">
-                    <span>
-                      <img src={Logo} alt="Employee Management System" height="18" />
-                    </span>
+                    <LevoraBrand className="justify-content-center text-white" showTagline={false} />
                   </Link>
                 </Card.Header>
                 <Card.Body className="p-4">{children}</Card.Body>
@@ -63,7 +64,7 @@ const AccountLayout = ({ bottomLinks, children }) => {
         </Container>
       </div>
       <footer className="footer footer-alt">
-        {t("Employee Management System")}
+        {t(BRAND_NAME)}
       </footer>
     </>
   );

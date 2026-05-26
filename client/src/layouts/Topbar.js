@@ -16,12 +16,11 @@ import SearchDropdown from "../components/Ui/SearchDropdown";
 import TopbarSearch from "../components/Ui/TopbarSearch";
 import AppsDropdown from "../components/AppsDropdown/";
 import SummaryRequest from "../APIRequest/SummaryRequest";
+import LevoraBrand from "../components/Brand/LevoraBrand";
+import { BRAND_NAME } from "../constants/brand";
 
 // images
 import avatar1 from "../assets/images/users/avatar-2.jpg";
-import logoSmDark from "../assets/images/logo_sm_dark.png";
-import logoSmLight from "../assets/images/logo_sm.png";
-import logo from "../assets/images/logo.png";
 import defaultAvatar from "../assets/images/users/avatar-1.jpg";
 
 //constants
@@ -186,20 +185,16 @@ const Topbar = ({
         <div className={containerCssClasses}>
           {!hideLogo && (
             <Link to="/" className="topnav-logo">
-              <span className="topnav-logo-lg">
-                <img src={logo} alt="logo" height="16" />
-              </span>
-              <span className="topnav-logo-sm">
-                <img
-                  src={topbarDark ? logoSmLight : logoSmDark}
-                  alt="logo"
-                  height="16"
-                />
-              </span>
+              <LevoraBrand showTagline={false} className="hr-topbar-brand" />
             </Link>
           )}
 
           <div className="hr-topbar-context d-none d-md-flex">
+            {hideLogo && (
+              <span className="hr-topbar-brand-inline d-none d-xl-inline-flex">
+                <span className="hr-topbar-brand-label">{BRAND_NAME}</span>
+              </span>
+            )}
             <span className="hr-topbar-time">
               <i className="mdi mdi-clock-time-four-outline me-1"></i>
               {clock.toLocaleDateString()}{" "}

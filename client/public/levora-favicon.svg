@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="levoraGradient" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="18" fill="#0f172a"/>
+  <rect x="8" y="8" width="48" height="48" rx="14" fill="url(#levoraGradient)"/>
+  <path d="M23 19h8v18h17v8H23V19z" fill="#ffffff"/>
+</svg>

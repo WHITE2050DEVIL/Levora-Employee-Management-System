@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 // API Requests
 import EmployeeRequest from "../../APIRequest/EmployeeRequest";
 import SummaryRequest from "../../APIRequest/SummaryRequest";
+import { BRAND_NAME, BRAND_TAGLINE } from "../../constants/brand";
 
 // Child Components
 import Statistics from "./Statistics";
@@ -48,12 +49,12 @@ const AdminDashboard = () => {
       <section className="hr-dashboard-hero">
         <div>
           <span className="badge bg-light text-primary mb-3">
-            {t("Admin Workspace")}
+            {t(BRAND_NAME)}
           </span>
-          <h1>{t("Employee Management Command Center")}</h1>
+          <h1>{t(BRAND_TAGLINE)}</h1>
           <p>
             {t(
-              "Track people, departments, leave approvals, and daily HR activity from one focused workspace."
+              "Manage leave approvals, people records, departments, and daily operations from one premium workspace."
             )}
           </p>
           <div className="hr-hero-actions">

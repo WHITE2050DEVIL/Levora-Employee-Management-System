@@ -9,13 +9,8 @@ import { getMenuItems } from "../helpers/menu";
 
 // components
 import AppMenu from "./Menu";
-
-// images
-import logoSm from "../assets/images/logo_sm.png";
-import logoDark from "../assets/images/logo-dark.png";
-import logoDarkSm from "../assets/images/logo_sm_dark.png";
-import logo from "../assets/images/logo.png";
 import defaultAvatar from "../assets/images/users/avatar-1.jpg";
+import LevoraBrand from "../components/Brand/LevoraBrand";
 
 const filterMenuTree = (items, query) => {
   if (!query) return items;
@@ -135,12 +130,7 @@ const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }) => {
     <div className="leftside-menu" ref={menuNodeRef}>
       {!hideLogo && (
         <Link to="/" className="logo text-center logo-light d-block py-3">
-          <span className="logo-lg">
-            <img src={isLight ? logoDark : logo} alt="logo" height="20" />
-          </span>
-          <span className="logo-sm">
-            <img src={isLight ? logoSm : logoDarkSm} alt="logo" height="20" />
-          </span>
+          <LevoraBrand compact={isCondensed} showTagline={!isCondensed} />
         </Link>
       )}
 
