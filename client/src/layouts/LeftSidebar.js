@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import SimpleBar from "simplebar-react";
+import { useTranslation } from "react-i18next";
 
 import { getMenuItems } from "../helpers/menu";
 
@@ -34,16 +35,19 @@ const filterMenuTree = (items, query) => {
 
 /* sidebar content */
 const SideBarContent = ({ hideUserProfile, userRole }) => {
+  const { t } = useTranslation();
   const { UserDetails } = useSelector((state) => state.User);
+  const { AccessToken } = useSelector((state) => state.Auth);
   const [menuSearch, setMenuSearch] = useState("");
+  const hasSearch = menuSearch.trim().length > 0;
   const currentUser = Array.isArray(UserDetails) ? UserDetails[0] : UserDetails;
   const fullName =
     [currentUser?.FirstName, currentUser?.LastName].filter(Boolean).join(" ") ||
     currentUser?.FullName ||
     "System User";
   const menuItems = useMemo(
-    () => filterMenuTree(getMenuItems(userRole), menuSearch),
-    [menuSearch, userRole]
+    () => filterMenuTree(getMenuItems(userRole, !!AccessToken, t), menuSearch),
+    [AccessToken, menuSearch, t, userRole]
   );
 
   return (
@@ -67,7 +71,7 @@ const SideBarContent = ({ hideUserProfile, userRole }) => {
       )}
 
       <div className="px-3 pt-2 pb-3">
-        <div className="position-relative">
+        <div className="position-relative hr-sidebar-search">
           <i
             className="mdi mdi-magnify position-absolute"
             style={{ top: "11px", left: "12px", color: "#94a3b8" }}
@@ -80,10 +84,26 @@ const SideBarContent = ({ hideUserProfile, userRole }) => {
             value={menuSearch}
             onChange={(event) => setMenuSearch(event.target.value)}
           />
+          {hasSearch && (
+            <button
+              type="button"
+              className="btn btn-link p-0 hr-sidebar-search-clear"
+              onClick={() => setMenuSearch("")}
+              aria-label="Clear menu search"
+            >
+              <i className="mdi mdi-close-circle-outline"></i>
+            </button>
+          )}
         </div>
       </div>
 
-      <AppMenu menuItems={menuItems} />
+      {menuItems.length > 0 ? (
+        <AppMenu menuItems={menuItems} />
+      ) : (
+        <div className="px-3 pb-4 text-muted small">
+          No menu items found for this search.
+        </div>
+      )}
       <div className="clearfix" />
     </>
   );
@@ -94,7 +114,8 @@ const LeftSidebar = ({ isCondensed, isLight, hideLogo, hideUserProfile }) => {
   
   // Connect Redux memory to check the User's explicit access role
   const { UserDetails } = useSelector((state) => state.User);
-  const userRole = UserDetails?.Roles || "EMPLOYEE";
+  const currentUser = Array.isArray(UserDetails) ? UserDetails[0] : UserDetails;
+  const userRole = (currentUser?.Roles || "EMPLOYEE").toUpperCase();
 
   const handleOtherClick = (e: any) => {
     if (menuNodeRef && menuNodeRef.current && menuNodeRef.current.contains(e.target)) return;

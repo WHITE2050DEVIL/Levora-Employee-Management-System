@@ -55,16 +55,16 @@ const VerticalLayout = () => {
    */
   const openMenu = () => {
     setIsMenuOpened((prevState) => {
-      setIsMenuOpened(!prevState);
-    });
-
-    if (document.body) {
-      if (isMenuOpened) {
-        document.body.classList.remove("sidebar-enable");
-      } else {
-        document.body.classList.add("sidebar-enable");
+      const nextState = !prevState;
+      if (document.body) {
+        if (nextState) {
+          document.body.classList.add("sidebar-enable");
+        } else {
+          document.body.classList.remove("sidebar-enable");
+        }
       }
-    }
+      return nextState;
+    });
   };
 
   const updateDimensions = useCallback(() => {

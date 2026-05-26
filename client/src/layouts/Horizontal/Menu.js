@@ -62,8 +62,9 @@ const MenuItemWithChildren = ({
           aria-labelledby={item.key}
         >
           {item.children.map((child, i) => {
+            const childKey = `${item.key || "menu"}-${child.key || "child"}-${i}`;
             return (
-              <React.Fragment key={i}>
+              <React.Fragment key={childKey}>
                 {child.children ? (
                   <>
                     {/* parent */}
@@ -216,8 +217,9 @@ const AppMenu = ({
     <>
       <ul className="navbar-nav" ref={menuRef} id="main-side-menu">
         {(topnavMenuItems || []).map((item, idx) => {
+          const itemKey = `${item.key || "topnav-item"}-${idx}`;
           return (
-            <React.Fragment key={idx}>
+            <React.Fragment key={itemKey}>
               {item.children ? (
                 <MenuItemWithChildren
                   item={item}

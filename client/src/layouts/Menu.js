@@ -59,8 +59,9 @@ const MenuItemWithChildren = ({
       <Collapse in={open}>
         <ul className={classNames(subMenuClassNames)}>
           {item.children.map((child, i) => {
+            const childKey = `${item.key || "menu"}-${child.key || "child"}-${i}`;
             return (
-              <React.Fragment key={i}>
+              <React.Fragment key={childKey}>
                 {child.children ? (
                   <>
                     {/* parent */}
@@ -205,8 +206,9 @@ const AppMenu = ({
     <>
       <ul className="side-nav" ref={menuRef} id="main-side-menu">
         {(menuItems || []).map((item, idx) => {
+          const itemKey = `${item.key || "menu-item"}-${idx}`;
           return (
-            <React.Fragment key={idx}>
+            <React.Fragment key={itemKey}>
               {item.isTitle ? (
                 <li className="side-nav-title side-nav-item">{item.label}</li>
               ) : (

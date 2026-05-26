@@ -4,24 +4,14 @@ import { BsCircle } from "react-icons/bs";
 import { RiDashboardLine } from "react-icons/ri";
 import { HiOutlineDocumentDuplicate } from "react-icons/hi";
 import { AiOutlineUserAdd } from "react-icons/ai";
-import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 
-const MenuItems = () => {
-  const { t } = useTranslation();
-  const { UserDetails } = useSelector((state) => state.User);
-  const { AccessToken } = useSelector((state) => state.Auth);
-
-  // Safely handle if UserDetails is wrapped in an array or an object from the backend
-  const currentUser = Array.isArray(UserDetails) ? UserDetails[0] : UserDetails;
-
-  // Convert the role string to UPPERCASE to guarantee a perfect match every time
-  const userRole = currentUser?.Roles?.toUpperCase();
+const MenuItems = (t = (value) => value, userRole = "", accessToken = false) => {
+  const normalizedRole = userRole?.toUpperCase();
 
   // ==========================================
   // 1. STAFF / EMPLOYEE MENU NAVIGATION
   // ==========================================
-  if (AccessToken && userRole === "STAFF") {
+  if (accessToken && normalizedRole === "STAFF") {
     return [
       { key: "navigation", label: t("Staff Routes"), isTitle: true }, 
       {
@@ -80,7 +70,7 @@ const MenuItems = () => {
   // ==========================================
   // 2. HOD MENU NAVIGATION
   // ==========================================
-  else if (AccessToken && userRole === "HOD") {
+  else if (accessToken && normalizedRole === "HOD") {
     return [
       { key: "navigation", label: t("Hod Routes"), isTitle: true },
       {
@@ -132,7 +122,7 @@ const MenuItems = () => {
   // ==========================================
   // 3. ADMIN MENU NAVIGATION
   // ==========================================
-  else if (AccessToken && userRole === "ADMIN") {
+  else if (accessToken && normalizedRole === "ADMIN") {
     return [
       { key: "navigation", label: t("Admin Routes"), isTitle: true },
       {

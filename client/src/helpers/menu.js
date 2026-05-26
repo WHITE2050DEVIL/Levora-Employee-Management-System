@@ -5,8 +5,8 @@ import MenuItems from "../constants/menu";
  * Dynamic menu filtering based on the authenticated user's role
  * @param {string} role - The current user's role (e.g., 'ADMIN', 'HOD', 'EMPLOYEE')
  */
-const getMenuItems = (role) => {
-  const allItems = MenuItems() || [];
+const getMenuItems = (role, isAuthenticated, t) => {
+  const allItems = MenuItems(t, role, isAuthenticated) || [];
   const userRole = role?.toUpperCase();
 
   // Recursive function to deeply filter out routes the current role shouldn't see
