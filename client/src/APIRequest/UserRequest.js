@@ -55,7 +55,6 @@ class UserRequest {
 
   static async VerifyAccountSentOtp() {
     const Email = SessionHelper.GetRecoverVerifyEmail();
-    console.log(Email);
     const { data } = await RestClient.getRequest(
       `/User/VerifyAccountSentOtp/${encodeURIComponent(Email)}`,
     );

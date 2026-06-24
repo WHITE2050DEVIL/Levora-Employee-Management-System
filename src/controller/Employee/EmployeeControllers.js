@@ -6,6 +6,7 @@
 // INTERNAL IMPORTS
 // ===============================================
 const EmployeeModel = require("../../model/Employee/EmployeeModel");
+const DepartmentModel = require("../../model/Department/DepartmentModel");
 const OtpModel = require("../../model/Otps/OtpModel");
 
 const EmployeeCreateService = require("../../services/Employee/EmployeeCreateService");
@@ -28,9 +29,17 @@ const DeleteService = require("../../services/Common/DeleteService");
 /**
  * Combines frontend FirstName and LastName into a single Name string for Mongoose validation
  */
-const processIncomingPayload = (body) => {
+const processIncomingPayload = async (body) => {
   if (body && (body.FirstName || body.LastName)) {
     body.Name = `${body.FirstName || ""} ${body.LastName || ""}`.trim();
+  }
+  if (body?.DepartmentId && !body.Department) {
+    const department = await DepartmentModel.findById(body.DepartmentId).select(
+      "DepartmentName",
+    );
+    if (department?.DepartmentName) {
+      body.Department = department.DepartmentName;
+    }
   }
   return body;
 };
@@ -74,7 +83,7 @@ const transformEmployeeData = (data) => {
 // ===============================================
 const EmployeeCreate = async (req, res, next) => {
   try {
-    req.body = processIncomingPayload(req.body);
+    req.body = await processIncomingPayload(req.body);
 
     const result = await EmployeeCreateService(req, EmployeeModel);
 
@@ -98,6 +107,7 @@ const EmployeeList = async (req, res, next) => {
 
     const SearchArray = [
       { Name: SearchRgx },
+      { Department: SearchRgx },
       { Phone: SearchRgx },
       { Email: SearchRgx },
       { Roles: SearchRgx },
@@ -135,7 +145,7 @@ const EmployeeDetails = async (req, res, next) => {
 // ===============================================
 const EmployeeUpdate = async (req, res, next) => {
   try {
-    req.body = processIncomingPayload(req.body);
+    req.body = await processIncomingPayload(req.body);
 
     const result = await UpdateService(req, EmployeeModel);
 
@@ -170,7 +180,7 @@ const ProfileDetails = async (req, res, next) => {
 // ===============================================
 const ProfileUpdate = async (req, res, next) => {
   try {
-    req.body = processIncomingPayload(req.body);
+    req.body = await processIncomingPayload(req.body);
 
     const result = await EmployeeUpdateService(req, EmployeeModel);
 

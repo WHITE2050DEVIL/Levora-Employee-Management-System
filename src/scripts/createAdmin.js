@@ -2,11 +2,13 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 
-const EmployeeModel = require("../src/model/Employee/EmployeeModel");
+const EmployeeModel = require("../model/Employee/EmployeeModel");
 
 const createAdmin = async () => {
   try {
-    await mongoose.connect(process.env.DB_URL);
+    await mongoose.connect(
+      process.env.MONGODB_CONNECTION_URL || process.env.DB_URL
+    );
 
     const hashedPassword = await bcrypt.hash("admin@123", 10);
 
@@ -28,11 +30,10 @@ const createAdmin = async () => {
       { upsert: true, new: true }
     );
 
-    console.log("✅ Admin created/updated:", admin.Email);
-
-    process.exit();
+    console.log("Admin created/updated:", admin.Email);
+    process.exit(0);
   } catch (err) {
-    console.log("❌ Error:", err);
+    console.error("Error:", err);
     process.exit(1);
   }
 };

@@ -43,17 +43,16 @@ const LeaveTypeCreateUpdatePage = () => {
    * Handle the form submission
    */
   const CreateUpdateLeaveType = (values) => {
-    if (!ObjectID) {
-      LeaveTypeRequest.LeaveTypeCreate({
-        LeaveTypeName: values.LeaveTypeName,
-        LeaveTypeDetails: values.LeaveTypeDetails,
-        LeaveTypeStatus: values.LeaveTypeStatus,
-      }).then((result) => {
-        console.log(result);
-        if (result) {
-          navigate("/leave-type/leave-type-list");
-        }
-      });
+      if (!ObjectID) {
+        LeaveTypeRequest.LeaveTypeCreate({
+          LeaveTypeName: values.LeaveTypeName,
+          LeaveTypeDetails: values.LeaveTypeDetails,
+          LeaveTypeStatus: values.LeaveTypeStatus,
+        }).then((result) => {
+          if (result) {
+            navigate("/leave-type/leave-type-list");
+          }
+        });
     } else {
       LeaveTypeRequest.LeaveTypeUpdate(ObjectID, {
         LeaveTypeName: values.LeaveTypeName,

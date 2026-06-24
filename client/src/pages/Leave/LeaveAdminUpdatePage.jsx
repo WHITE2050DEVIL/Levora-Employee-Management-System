@@ -19,6 +19,7 @@ const LeaveAdminUpdatePage = () => {
 
   // Pulling details from the global Redux leave slice
   const { LeaveDetails } = useSelector((state) => state.Leave);
+  const currentStatus = LeaveDetails?.AdminStatus || "Pending";
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -91,6 +92,44 @@ const LeaveAdminUpdatePage = () => {
         <Col xs={12}>
           <Card>
             <Card.Body>
+              <Row className="mb-3">
+                <Col xl={12}>
+                  <div className="d-flex flex-wrap gap-2 align-items-center p-3 rounded border bg-light">
+                    <div>
+                      <div className="text-muted small">Current Admin Status</div>
+                      <strong>{currentStatus}</strong>
+                    </div>
+                    <div className="ms-auto d-flex gap-2">
+                      {statusOptions.map((option) => (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          size="sm"
+                          variant={currentStatus === option.value ? "primary" : "outline-secondary"}
+                          onClick={() => {
+                            const nextValue = {
+                              AdminStatus: option.value,
+                            };
+
+                            if (LeaveDetails?.NumOfDay) {
+                              nextValue.NumOfDay = LeaveDetails.NumOfDay;
+                            }
+
+                            LeaveRequest.LeaveUpdate(objectID, nextValue).then((result) => {
+                              if (result) {
+                                LeaveRequest.LeaveDetails(objectID);
+                              }
+                            });
+                          }}
+                          disabled={!objectID}
+                        >
+                          Set {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
               <Row>
                 <Col>
                   {/* 👇 CRITICAL FIX: The key attribute forces the form to re-render 
@@ -123,6 +162,9 @@ const LeaveAdminUpdatePage = () => {
                             (option) => option.value === LeaveDetails?.AdminStatus
                           ) || statusOptions[0]}
                         />
+                        <div className="text-muted small mb-3">
+                          Pick a status from the dropdown or use the quick buttons above.
+                        </div>
                       </Col>
                       
                       <Col xl={12}>

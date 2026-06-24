@@ -32,15 +32,18 @@ const DefaultErrorHandler = (err, req, res, next) => {
     status = 400;
   }
 
-  // Log the exact error to your backend terminal so you can read it!
-  console.log("=== SERVER CRASH DETAILS ===");
-  console.log(err);
-  console.log("============================");
+  if (process.env.NODE_ENV !== "production") {
+    console.error("=== SERVER ERROR DETAILS ===");
+    console.error(err);
+    console.error("============================");
+  } else {
+    console.error("Server error:", message);
+  }
 
   res.status(status).json({
     success: false,
     message,
-    stack: process.env.NODE_ENV === "development" ? err.stack : [],
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 };
 

@@ -24,8 +24,6 @@ app.set("trust proxy", 1);
 
 dotenv.config();
 
-console.log("JWT KEY:", process.env.JWT_SECRET_KEY);
-
 /* =========================
    INTERNAL IMPORTS
 ========================= */
@@ -55,9 +53,20 @@ connectDB();
 ========================= */
 
 // CORS
+const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS policy does not allow this origin"));
+    },
     credentials: true,
   })
 );

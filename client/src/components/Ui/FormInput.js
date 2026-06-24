@@ -5,8 +5,7 @@ import classNames from "classnames";
 import { ErrorMessage, Field } from "formik";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import SimpleMdeEditor from "react-simplemde-editor";
 import Select from "react-select";
 import ReactCodeInput from "react-code-input";
 
@@ -60,8 +59,11 @@ const FormInput = ({
                 className="react-select"
                 classNamePrefix="react-select"
                 options={options}
-                onChange={(option) => setFieldValue(name, option.value)}
-                defaultValue={defaultValueSelect}
+                value={defaultValueSelect}
+                onChange={(option) => {
+                  setDefaultValueSelect(option);
+                  setFieldValue(name, option?.value || "");
+                }}
               />
 
               <ErrorMessage name={name}>
@@ -268,9 +270,13 @@ const FormInput = ({
         <Field>
           {({ field, form: { touched, errors, setFieldValue, values } }) => (
             <>
-              <ReactQuill
-                value={values?.[name]}
+              <SimpleMdeEditor
+                value={values?.[name] || ""}
                 onChange={(text) => setFieldValue(name, text)}
+                options={{
+                  spellChecker: false,
+                  placeholder,
+                }}
               />
 
               <ErrorMessage name={name}>

@@ -1,7 +1,7 @@
 // External Import
 import React, { useEffect, useMemo, useState } from "react";
-import { Row, Col, Card, Table, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Row, Col, Card, Table, Button, Form } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
 import ReactPaginate from "react-paginate";
 import { GrDocumentCsv } from "react-icons/gr";
 import { SiMicrosoftexcel } from "react-icons/si";
@@ -22,6 +22,8 @@ const LeaveAdminListPage = ({ status }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [perPage, setPerPage] = useState(5);
   const [searchKey, setSearchKey] = useState(0);
+  const [statusDrafts, setStatusDrafts] = useState({});
+  const navigate = useNavigate();
 
   const { LeaveLists, TotalLeave } = useSelector((state) => state.Leave);
   const { UserDetails } = useSelector((state) => state.User);
@@ -30,7 +32,16 @@ const LeaveAdminListPage = ({ status }) => {
   const isAdmin = userRole === "ADMIN";
   const isHod = userRole === "HOD";
   const pageLabel = status ? `${status} Leave` : "Leave List";
-  const statusViewLabel = status || (isAdmin ? "HOD approved leave" : "All leave");
+  const statusViewValue = status || "__default";
+  const editableStatusField = isHod ? "HodStatus" : isAdmin ? "AdminStatus" : null;
+  const editableRemarkField = isHod ? "HodRemark" : isAdmin ? "AdminRemark" : null;
+  const statusViewOptions = [
+    { value: "__default", label: "HOD approved leave", path: "/leave/leave-list" },
+    { value: "All", label: "All leave", path: "/leave/leave-list" },
+    { value: "Pending", label: "Pending leave", path: "/leave/leave-list-pending" },
+    { value: "Approved", label: "Approved leave", path: "/leave/leave-list-approved" },
+    { value: "Rejected", label: "Rejected leave", path: "/leave/leave-list-rejected" },
+  ];
 
   const fetchLeaves = async () => {
     if (!status) {
@@ -65,6 +76,18 @@ const LeaveAdminListPage = ({ status }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNumber, perPage, searchKey, status, userRole]);
 
+  useEffect(() => {
+    if (!editableStatusField) return;
+
+    setStatusDrafts((prev) => {
+      const next = { ...prev };
+      (LeaveLists || []).forEach((record) => {
+        next[record?._id] = record?.[editableStatusField] || "Pending";
+      });
+      return next;
+    });
+  }, [LeaveLists, editableStatusField]);
+
   const visibleLeaves = useMemo(() => {
     if (!status || isAdmin || isHod) return LeaveLists || [];
 
@@ -91,6 +114,15 @@ const LeaveAdminListPage = ({ status }) => {
     setPageNumber(1);
   };
 
+  const handleStatusViewChange = (e) => {
+    const nextView = statusViewOptions.find((option) => option.value === e.target.value);
+    if (nextView?.path) {
+      navigate(nextView.path);
+      setPageNumber(1);
+      setSearchKey(0);
+    }
+  };
+
   const HandlePageClick = (e) => {
     setPageNumber(e.selected + 1);
   };
@@ -115,6 +147,28 @@ const LeaveAdminListPage = ({ status }) => {
     };
 
     const result = await LeaveRequest.LeaveUpdate(id, payload);
+    if (result) {
+      fetchLeaves();
+    }
+  };
+
+  const handleInlineStatusChange = (id, value) => {
+    setStatusDrafts((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleInlineStatusSave = async (record) => {
+    if (!editableStatusField || !record?._id) return;
+
+    const nextStatus = statusDrafts?.[record._id] || record?.[editableStatusField] || "Pending";
+    const payload = {
+      [editableStatusField]: nextStatus,
+      [editableRemarkField]: `Updated from leave list as ${nextStatus}`,
+    };
+
+    const result = await LeaveRequest.LeaveUpdate(record._id, payload);
     if (result) {
       fetchLeaves();
     }
@@ -161,24 +215,35 @@ const LeaveAdminListPage = ({ status }) => {
                 </div>
               </div>
 
-              <div className="hr-filter-grid">
-                <div className="hr-filter-field">
-                  <label>Search</label>
-                  <input
-                    placeholder={`${displayTotal} records...`}
-                    className="form-control"
-                    onChange={SearchKeywordOnChange}
-                  />
+                <div className="hr-filter-grid">
+                  <div className="hr-filter-field">
+                    <label>Search</label>
+                    <input
+                      placeholder={`${displayTotal} records...`}
+                      className="form-control"
+                      onChange={SearchKeywordOnChange}
+                    />
+                  </div>
+                  <div className="hr-filter-field">
+                    <label>Status View</label>
+                    <Form.Select
+                      className="form-control"
+                      value={statusViewValue}
+                      onChange={handleStatusViewChange}
+                    >
+                      {statusViewOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </div>
                 </div>
-                <div className="hr-filter-field">
-                  <label>Status View</label>
-                  <input
-                    className="form-control"
-                    value={statusViewLabel}
-                    readOnly
-                  />
+              {editableStatusField ? (
+                <div className="alert alert-info py-2 px-3 mt-3 mb-3">
+                  Change the status directly from the Action column using the dropdown and Save button.
                 </div>
-              </div>
+              ) : null}
 
               <Row>
                 <Col>
@@ -252,7 +317,28 @@ const LeaveAdminListPage = ({ status }) => {
                               </span>
                             </td>
                             <td>
-                              {isHod && record?.HodStatus === "Pending" ? (
+                              {editableStatusField ? (
+                                <div className="d-flex flex-column gap-2">
+                                  <Form.Select
+                                    size="sm"
+                                    value={statusDrafts?.[record?._id] || record?.[editableStatusField] || "Pending"}
+                                    onChange={(e) =>
+                                      handleInlineStatusChange(record?._id, e.target.value)
+                                    }
+                                  >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                  </Form.Select>
+                                  <Button
+                                    size="sm"
+                                    variant="primary"
+                                    onClick={() => handleInlineStatusSave(record)}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              ) : isHod && record?.HodStatus === "Pending" ? (
                                 <div className="d-flex gap-1">
                                   <Button
                                     size="sm"
@@ -272,12 +358,10 @@ const LeaveAdminListPage = ({ status }) => {
                                   </Button>
                                 </div>
                               ) : (
-                                <Link
-                                  to={`/leave/leave-create-update?id=${record?._id}`}
-                                  className="action-icon text-warning me-2"
-                                  aria-label="Edit leave"
-                                >
-                                  <i className="mdi mdi-square-edit-outline" style={{ fontSize: "1.2rem" }}></i>
+                                <Link to={`/leave/leave-create-update?id=${record?._id}`}>
+                                  <Button size="sm" variant="outline-primary" className="me-2">
+                                    Review
+                                  </Button>
                                 </Link>
                               )}
                               <span

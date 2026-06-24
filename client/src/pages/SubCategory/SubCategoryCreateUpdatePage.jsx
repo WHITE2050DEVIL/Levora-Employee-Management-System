@@ -48,19 +48,18 @@ const SubCategoryCreateUpdatePage = () => {
    * Handle the form submission
    */
   const CreateUpdateSubCategory = (values) => {
-    if (!ObjectID) {
-      SubCategoryRequest.SubCategoryCreate({
-        CategoryId: values.CategoryId,
-        SubCategoryName: values.SubCategoryName,
-        SubCategorySlug: values.SubCategorySlug,
-        SubCategoryDetails: values.SubCategoryDetails,
-        SubCategoryStatus: values.SubCategoryStatus,
-      }).then((result) => {
-        console.log(result);
-        if (result) {
-          navigate("/subcategory/subcategory-list");
-        }
-      });
+      if (!ObjectID) {
+        SubCategoryRequest.SubCategoryCreate({
+          CategoryId: values.CategoryId,
+          SubCategoryName: values.SubCategoryName,
+          SubCategorySlug: values.SubCategorySlug,
+          SubCategoryDetails: values.SubCategoryDetails,
+          SubCategoryStatus: values.SubCategoryStatus,
+        }).then((result) => {
+          if (result) {
+            navigate("/subcategory/subcategory-list");
+          }
+        });
     } else {
       SubCategoryRequest.SubCategoryUpdate(ObjectID, {
         CategoryId: values.CategoryId,

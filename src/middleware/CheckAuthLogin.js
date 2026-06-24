@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const DecodedToken = require("../utility/DecodedToken");
 
 // ==========================================
@@ -26,7 +25,9 @@ const CheckEmployeeAuth = async (req, res, next) => {
 
         next();
     } catch (error) {
-        console.log("Auth Error:", error);
+        if (process.env.NODE_ENV !== "production") {
+            console.error("Auth Error:", error);
+        }
         return res.status(401).json({ success: false, message: "Unauthorized Access" });
     }
 };

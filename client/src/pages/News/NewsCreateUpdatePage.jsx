@@ -46,8 +46,6 @@ const NewsCreateUpdatePage = () => {
     NewsThumbnail: yup.string().required("Please Enter News Thumbnail"),
   });
 
-  console.log(NewsDetails);
-
   /*
    * form methods
    */
@@ -56,21 +54,20 @@ const NewsCreateUpdatePage = () => {
    * Handle the form submission
    */
   const CreateUpdateNews = (values) => {
-    if (!ObjectID) {
-      NewsRequest.NewsCreate({
-        Category: values.Category,
-        SubCategory: values.SubCategory,
-        Tags: values.Tags,
+      if (!ObjectID) {
+        NewsRequest.NewsCreate({
+          Category: values.Category,
+          SubCategory: values.SubCategory,
+          Tags: values.Tags,
         NewsTitle: values.NewsTitle,
-        NewsThumbnail: values.NewsThumbnail,
-        NewsDetails: values.NewsDetails,
-        NewsStatus: values.NewsStatus,
-      }).then((result) => {
-        console.log(result);
-        if (result) {
-          navigate("/news/news-list");
-        }
-      });
+          NewsThumbnail: values.NewsThumbnail,
+          NewsDetails: values.NewsDetails,
+          NewsStatus: values.NewsStatus,
+        }).then((result) => {
+          if (result) {
+            navigate("/news/news-list");
+          }
+        });
     } else {
       NewsRequest.NewsUpdate(ObjectID, {
         Category: values.Category,

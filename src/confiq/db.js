@@ -8,13 +8,14 @@ const connectDB = async () => {
       process.env.MONGODB_CONNECTION_URL
     );
 
-    console.log("MongoDB Atlas Connected Successfully");
+    if (process.env.NODE_ENV !== "production") {
+      console.log("MongoDB Atlas Connected Successfully");
+    }
 
   } catch (error) {
 
-    console.log("MongoDB Connection Failed");
-
-    console.log(error.message);
+    console.error("MongoDB Connection Failed");
+    console.error(error.message);
 
     process.exit(1);
   }

@@ -8,6 +8,43 @@ const EmployeesSchema = new Schema(
       required: true,
     },
 
+    FirstName: {
+      type: String,
+      default: "",
+    },
+
+    LastName: {
+      type: String,
+      default: "",
+    },
+
+    DepartmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      default: null,
+    },
+
+    Department: {
+      type: String,
+      default: "",
+    },
+
+    Gender: {
+      type: String,
+      enum: ["Male", "Female", "Others"],
+      default: "Others",
+    },
+
+    DateOfBirth: {
+      type: Date,
+      default: null,
+    },
+
+    Address: {
+      type: String,
+      default: "",
+    },
+
     Phone: {
       type: String,
       required: true,

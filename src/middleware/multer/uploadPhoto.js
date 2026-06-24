@@ -8,6 +8,12 @@ const shell = require("shelljs");
 //Internal Lib Import
 const { CreateError } = require("../../helper/ErrorHandler");
 
+const serverBaseUrl =
+  process.env.PUBLIC_BASE_URL ||
+  process.env.SERVER_BASE_URL ||
+  process.env.APP_BASE_URL ||
+  "http://localhost:8000";
+
 //Storage
 const multerStorage = multer.memoryStorage();
 
@@ -59,12 +65,12 @@ const resizeImg = async (req, res, next) => {
       .jpeg({ quality: 90 })
       .toFile(path.join(`${directory + "/" + formetFileName}`));
 
-    req.file.fileUrl = `http://localhost:8000/${folderName}/${formetFileName}`;
+    req.file.fileUrl = `${serverBaseUrl}/${folderName}/${formetFileName}`;
     req.file.path = `/${folderName + "/" + formetFileName}`;
 
     next();
   } catch (e) {
-    CreateError(e.message, e.status);
+    next(CreateError(e.message, e.status || 500));
   }
 };
 
