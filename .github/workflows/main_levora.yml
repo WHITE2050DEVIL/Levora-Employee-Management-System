@@ -30,12 +30,20 @@ jobs:
           npm run build --if-present
           npm run build --prefix client
           npm run test --if-present
+
+      - name: Prepare deployment package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force deploy | Out-Null
+          Copy-Item app.js, package.json, package-lock.json -Destination deploy -Force
+          Copy-Item src -Destination deploy -Recurse -Force
+          Copy-Item client/build -Destination deploy/client -Recurse -Force
       
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: deploy
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,5 +71,5 @@ jobs:
         with:
           app-name: 'Levora'
           slot-name: 'Production'
-          package: .
+          package: deploy
           
