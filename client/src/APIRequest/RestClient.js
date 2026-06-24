@@ -58,7 +58,7 @@ API.interceptors.response.use(
     const backendMessage = error?.response?.data?.message;
 
     if (status === 500) {
-      ToastMessage.errorMessage("Internal Server Error");
+      ToastMessage.errorMessage(backendMessage || "Internal Server Error");
     } 
     else if (status === 401) {
       ToastMessage.errorMessage(backendMessage || "Session expired. Please log in again.");
