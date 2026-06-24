@@ -4,8 +4,16 @@ const bcrypt = require("bcrypt");
 //Internal Import
 const { CreateError } = require("../../helper/ErrorHandler");
 
+const escapeRegExp = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const RecoveryResetPassService = async (Request, EmployeesModel, OtpModel) => {
-  const { OtpCode, Email } = Request.params;
+  const OtpCode = String(
+    Request.body?.OtpCode || Request.body?.OTP || Request.params?.OtpCode || "",
+  ).trim();
+  const Email = String(Request.body?.Email || Request.params?.Email || "")
+    .trim()
+    .toLowerCase();
   let { Password } = Request.body;
 
   if (!Password) {
@@ -15,7 +23,11 @@ const RecoveryResetPassService = async (Request, EmployeesModel, OtpModel) => {
   const countOtp = await OtpModel.aggregate([
     {
       $match: {
-        $and: [{ Email: Email }, { OtpCode: OtpCode }, { OtpStatus: 1 }],
+        $and: [
+          { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } },
+          { OtpCode: OtpCode },
+          { OtpStatus: 1 },
+        ],
       },
     },
   ]);
@@ -29,7 +41,7 @@ const RecoveryResetPassService = async (Request, EmployeesModel, OtpModel) => {
   Password = hash;
 
   await EmployeesModel.updateOne(
-    { Email: Email },
+    { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } },
     {
       Password: Password,
     },

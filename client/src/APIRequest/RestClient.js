@@ -13,7 +13,7 @@ import store from "../redux/store/store";
    AXIOS CONFIGURATION
    ========================================== */
 const API = axios.create({
-  baseURL: "http://localhost:8000/api/v1",
+  baseURL: process.env.REACT_APP_BASE_URL || "http://localhost:8000/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -71,7 +71,7 @@ API.interceptors.response.use(
       ToastMessage.errorMessage("Access Denied: Insufficient Privileges");
     } 
     else if (status === 404) {
-      ToastMessage.errorMessage("Requested API Endpoint Not Found");
+      ToastMessage.errorMessage(backendMessage || "Requested API Endpoint Not Found");
     } 
     else {
       ToastMessage.errorMessage(backendMessage || "Something went wrong. Please try again.");

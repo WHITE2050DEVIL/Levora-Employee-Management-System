@@ -127,11 +127,20 @@ app.use(morgan("dev"));
 ========================= */
 
 app.get("/", (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.sendFile(
+      path.resolve(
+        __dirname,
+        "client",
+        "build",
+        "index.html"
+      )
+    );
+    return;
+  }
 
   res.status(200).json({
-
     success: true,
-
     message:
       "Leave Management Backend Running Successfully",
   });

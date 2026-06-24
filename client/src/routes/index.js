@@ -12,6 +12,11 @@ import PublicRoute from "./PublicRoute";
 
 // Lazy Load Pages
 const Login = React.lazy(() => import("../pages/Account/Login"));
+const Register = React.lazy(() => import("../pages/Account/Register"));
+const ForgetPassword = React.lazy(() => import("../pages/Account/ForgetPassword"));
+const VerifyOtpPage = React.lazy(() => import("../pages/Account/VerifyOtpPage"));
+const ResetPasswordPage = React.lazy(() => import("../pages/Account/ResetPasswordPage"));
+const Logout = React.lazy(() => import("../pages/Account/Logout"));
 
 // Role-Based Dashboards
 const AdminDashboard = React.lazy(() => import("../pages/Dashboard/AdminDashboard"));
@@ -84,6 +89,11 @@ const AllRoutes = () => {
       <Route path="/" element={<PublicRoute component={DefaultLayout} />}>
         <Route index element={<Navigate to="/account/login" />} />
         <Route path="account/login" element={<LoadComponent component={Login} />} />
+        <Route path="account/register" element={<LoadComponent component={Register} />} />
+        <Route path="account/forget-password" element={<LoadComponent component={ForgetPassword} />} />
+        <Route path="account/verify-otp" element={<LoadComponent component={VerifyOtpPage} />} />
+        <Route path="account/reset-password" element={<LoadComponent component={ResetPasswordPage} />} />
+        <Route path="account/logout" element={<LoadComponent component={Logout} />} />
       </Route>
 
       {/* ==========================================

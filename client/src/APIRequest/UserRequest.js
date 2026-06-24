@@ -16,8 +16,9 @@ class UserRequest {
   }
 
   static async SendRecoveryOtp(Email) {
-    const { data } = await RestClient.getRequest(
-      `/Employee/SendRecoveryOtp/${Email}`,
+    const { data } = await RestClient.postRequest(
+      `/Employee/SendRecoveryOtp`,
+      { Email },
     );
     if (data) {
       ToastMessage.successMessage(data?.message);
@@ -28,9 +29,9 @@ class UserRequest {
 
   static async VerifyRecoveryOtp(Otp) {
     const Email = SessionHelper.GetRecoverVerifyEmail();
-    console.log(Email);
-    const { data } = await RestClient.getRequest(
-      `/Employee/VerifyRecoveryOtp/${Email}/${Otp}`,
+    const { data } = await RestClient.postRequest(
+      `/Employee/VerifyRecoveryOtp`,
+      { Email, OtpCode: Otp },
     );
     if (data) {
       SessionHelper.SetRecoverVerifyOTP(Otp);
@@ -43,8 +44,8 @@ class UserRequest {
     const Email = SessionHelper.GetRecoverVerifyEmail();
     const Otp = SessionHelper.GetRecoverVerifyOTP();
     const { data } = await RestClient.postRequest(
-      `/Employee/RecoveryResetPass/${Email}/${Otp}`,
-      PostBody,
+      `/RecoveryResetPass`,
+      { ...PostBody, Email, OtpCode: Otp },
     );
     if (data) {
       ToastMessage.successMessage(data?.message);
@@ -56,7 +57,7 @@ class UserRequest {
     const Email = SessionHelper.GetRecoverVerifyEmail();
     console.log(Email);
     const { data } = await RestClient.getRequest(
-      `/User/VerifyAccountSentOtp/${Email}`,
+      `/User/VerifyAccountSentOtp/${encodeURIComponent(Email)}`,
     );
     if (data) {
       ToastMessage.successMessage(data?.message);
@@ -66,7 +67,7 @@ class UserRequest {
 
   static async VerifyAccountVerifyOtp(Email, Otp) {
     const { data } = await RestClient.getRequest(
-      `/User/VerifyAccountVerifyOtp/${Email}/${Otp}`,
+      `/User/VerifyAccountVerifyOtp/${encodeURIComponent(Email)}/${encodeURIComponent(Otp)}`,
     );
     if (data) {
       ToastMessage.successMessage(data?.message);

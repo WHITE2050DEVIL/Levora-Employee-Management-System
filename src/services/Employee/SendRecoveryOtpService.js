@@ -3,11 +3,16 @@ const { CreateError } = require("../../helper/ErrorHandler");
 const GenRandNumber = require("../../helper/GenRandNumber");
 const SendMailUtility = require("../../utility/SendMailUtility");
 
+const escapeRegExp = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const SendRecoveryOtpService = async (Request, EmployeesModel, OtpModel) => {
-  const { Email } = Request.params;
+  const Email = String(Request.body?.Email || Request.params?.Email || "")
+    .trim()
+    .toLowerCase();
 
   const Employee = await EmployeesModel.aggregate([
-    { $match: { Email: Email } },
+    { $match: { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } } },
   ]);
   if (!Employee.length > 0) {
     throw CreateError("Employee Not Found", 404);

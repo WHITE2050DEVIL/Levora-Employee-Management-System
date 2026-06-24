@@ -24,8 +24,11 @@ router.post("/Auth/LoginUser", AuthControllers.LoginUser);
 
 // Password Recovery
 router.get("/Employee/SendRecoveryOtp/:Email", EmployeeControllers.SendRecoveryOtp);
+router.post("/Employee/SendRecoveryOtp", EmployeeControllers.SendRecoveryOtp);
 router.get("/Employee/VerifyRecoveryOtp/:Email/:OtpCode", EmployeeControllers.VerifyRecoveryOtp);
+router.post("/Employee/VerifyRecoveryOtp", EmployeeControllers.VerifyRecoveryOtp);
 router.post("/RecoveryResetPass/:Email/:OtpCode", EmployeeControllers.RecoveryResetPass);
+router.post("/RecoveryResetPass", EmployeeControllers.RecoveryResetPass);
 
 // ==========================================
 // 2. PROTECTED EMPLOYEE PROFILE ROUTES

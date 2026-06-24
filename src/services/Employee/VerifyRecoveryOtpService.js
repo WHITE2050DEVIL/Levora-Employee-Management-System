@@ -1,11 +1,23 @@
 //Internal import
 const { CreateError } = require("../../helper/ErrorHandler");
 
+const escapeRegExp = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const VerifyRecoveryOtpService = async (Request, OtpModel, session) => {
-  const { OtpCode, Email } = Request.params;
+  const OtpCode = String(
+    Request.body?.OtpCode || Request.body?.OTP || Request.params?.OtpCode || "",
+  ).trim();
+  const Email = String(Request.body?.Email || Request.params?.Email || "")
+    .trim()
+    .toLowerCase();
 
   const countOtp = await OtpModel.aggregate([
-    { $match: { $and: [{ Email: Email }, { OtpCode: OtpCode }] } },
+    {
+      $match: {
+        $and: [{ Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } }, { OtpCode: OtpCode }],
+      },
+    },
   ]);
 
   if (!countOtp.length > 0) {
@@ -15,7 +27,11 @@ const VerifyRecoveryOtpService = async (Request, OtpModel, session) => {
   const useOtpCode = await OtpModel.aggregate([
     {
       $match: {
-        $and: [{ Email: Email }, { OtpCode: OtpCode }, { OtpStatus: 0 }],
+        $and: [
+          { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } },
+          { OtpCode: OtpCode },
+          { OtpStatus: 0 },
+        ],
       },
     },
   ]);
