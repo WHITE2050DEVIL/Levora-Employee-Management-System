@@ -11,7 +11,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const xssClean = require("xss-clean");
 
 /* =========================
-   APP INITIALIZATION
+   APP INITIALIZATION 
 ========================= */
 
 const app = express();
