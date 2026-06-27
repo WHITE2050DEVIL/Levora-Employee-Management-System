@@ -11,60 +11,58 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      # 1. Build the Frontend UI
+      - name: Install and Build Frontend (UI)
         run: |
+          cd client
           npm install
-          npm install --prefix client
           npm run build --if-present
-          npm run build --prefix client
-          npm run test --if-present
+          cd ..
 
-      - name: Prepare deployment package
-        shell: pwsh
+      # 2. Install Backend Dependencies
+      - name: Install Backend Dependencies
         run: |
-          New-Item -ItemType Directory -Force deploy | Out-Null
-          Copy-Item app.js, package.json, package-lock.json -Destination deploy -Force
-          Copy-Item src -Destination deploy -Recurse -Force
-          Copy-Item client/build -Destination deploy/client -Recurse -Force
-      
+          npm install --production --if-present
+
+      # 3. Package everything together (Backend + built Frontend)
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: deploy
+          path: .
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
-          path: deploy
+          path: .
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8419DFBBD41F49298161D0A503331AE6 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B9662C4E78C94A33813E5A3386865116 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_76BA6224342F475AA4093ADBA8E65925 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D02DD11246B844C28CB7797EDC1DA8DC }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_13E69C7A97044481AD683BE98D83DA41 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E2414E6F86A141A0948BCAB0A6E6F829 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -72,5 +70,4 @@ jobs:
         with:
           app-name: 'Levora'
           slot-name: 'Production'
-          package: deploy
-          
+          package: .

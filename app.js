@@ -11,7 +11,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const xssClean = require("xss-clean");
 
 /* =========================
-   APP INITIALIZATION
+   APP INITIALIZATION 
 ========================= */
 
 const app = express();
@@ -76,10 +76,11 @@ app.use(
 app.use(hpp());
 
 
-// HELMET
+// HELMET (Updated configurations to allow local UI bundle assets to execute)
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
+    contentSecurityPolicy: false, 
   })
 );
 
@@ -130,45 +131,18 @@ app.use(
 app.use(morgan("dev"));
 
 
-
 /* =========================
-   TEST ROUTE
-========================= */
-
-app.get("/", (req, res) => {
-  if (process.env.NODE_ENV === "production") {
-    res.sendFile(
-      path.resolve(
-        __dirname,
-        "client",
-        "build",
-        "index.html"
-      )
-    );
-    return;
-  }
-
-  res.status(200).json({
-    success: true,
-    message:
-      "Leave Management Backend Running Successfully",
-  });
-});
-
-
-
-/* =========================
-   API ROUTES
+   API ROUTES (Must Be Loaded First)
 ========================= */
 
 app.use("/api/v1", routes);
 
 
-
 /* =========================
-   STATIC FILES
+   STATIC FILES & PRODUCTION UI BUILD
 ========================= */
 
+// Serve public asset folder
 app.use(
   "/",
   express.static(
@@ -176,24 +150,17 @@ app.use(
   )
 );
 
-
-
-/* =========================
-   PRODUCTION BUILD
-========================= */
-
+// Serve frontend assets if in production environment
 if (process.env.NODE_ENV === "production") {
-
+  // 1. Serve the compiled static assets (js, css, images)
   app.use(
     express.static(
-      path.join(__dirname, "client/build")
+      path.join(__dirname, "client", "build")
     )
   );
 
-
-
+  // 2. Catch-all route to serve index.html for SPA client-side routing
   app.get("*", (req, res) => {
-
     res.sendFile(
       path.resolve(
         __dirname,
@@ -203,8 +170,15 @@ if (process.env.NODE_ENV === "production") {
       )
     );
   });
+} else {
+  // Fallback Dev Test Route
+  app.get("/", (req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "Leave Management Backend Running Successfully (Development Mode)",
+    });
+  });
 }
-
 
 
 /* =========================
@@ -212,7 +186,6 @@ if (process.env.NODE_ENV === "production") {
 ========================= */
 
 app.use(NotFoundError);
-
 
 
 /* =========================
