@@ -6,10 +6,12 @@ const StaffList = ({ staffList = [] }) => {
   
   // Safe default fallback list to keep the layout clean if data is fetching
   const defaultStaffFallback = [
-    { _id: "1", FirstName: "System", LastName: "User", Department: "Operations", Email: "user@company.com", Image: "https://via.placeholder.com/150" }
+    { _id: "1", FirstName: "System", LastName: "User", Department: "Operations", Address: "System Address", Email: "user@company.com", Image: "https://via.placeholder.com/150" }
   ];
 
   const activeStaffList = staffList && staffList.length > 0 ? staffList : defaultStaffFallback;
+  const resolveEmployeeName = (employee) =>
+    [employee?.FirstName, employee?.LastName].filter(Boolean).join(" ") || "Unnamed Employee";
 
   return (
     <Card className="card-h-100">
@@ -36,12 +38,15 @@ const StaffList = ({ staffList = [] }) => {
                     />
                     <div className="w-100">
                       <h5 className="mt-0 mb-1 font-14 fw-semibold">
-                        {`${employee?.FirstName || ""} ${employee?.LastName || ""}`}{" "}
+                        {resolveEmployeeName(employee)}{" "}
                         <Badge bg="primary-lighten" className="text-primary ms-1 font-11 px-2 py-1 rounded-pill">
                           {employee?.Department || "General"}
                         </Badge>
                       </h5>
                       <span className="text-muted font-13">{employee?.Email || "No email assigned"}</span>
+                      <div className="text-muted font-12 mt-1 text-truncate">
+                        {employee?.Address || "No address on file"}
+                      </div>
                     </div>
                   </div>
                 </td>

@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 //Internal Lib Import
 import { VerticalForm, FormInput } from "../../components/Ui";
 import AccountLayout from "./AccountLayout";
-import AuthRequest from "../../APIRequest/AuthRequest";
 import UserRequest from "../../APIRequest/UserRequest";
 
 /* bottom link of account pages */

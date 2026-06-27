@@ -95,6 +95,8 @@ const LeaveList = async (req, res, next) => {
           LastName: 1,
           Email: 1,
           Image: 1,
+          Department: 1,
+          Address: 1,
         },
       },
     };
@@ -166,9 +168,11 @@ const LeaveAdminList = async (req, res, next) => {
           LastName: 1,
           Email: 1,
           Image: 1,
+          Department: 1,
+          Address: 1,
+        },
       },
-    },
-  };
+    };
 
     const result = await LeaveListService(
       req,
@@ -238,6 +242,8 @@ const LeaveListAdminByStatus = async (req, res, next) => {
           LastName: 1,
           Email: 1,
           Image: 1,
+          Department: 1,
+          Address: 1,
         },
       },
     };
@@ -305,6 +311,8 @@ const LeaveListHodByStatus = async (req, res, next) => {
           LastName: 1,
           Email: 1,
           Image: 1,
+          Department: 1,
+          Address: 1,
         },
       },
     };

@@ -122,6 +122,7 @@ const AllRoutes = () => {
 
         {/* LEAVE MANAGEMENT PATHS */}
         <Route path="leave/leave-list" element={<LoadComponent component={LeaveListPage} />} /> {/* 👈 FIXED syntax bracket */}
+        <Route path="leave/leave-list-all" element={<LoadComponent component={LeaveListPage} status="All" />} />
         
         <Route path="leave/leave-create-update" element={
             userRole === "ADMIN" ? <LoadComponent component={LeaveAdminUpdatePage} /> : <LoadComponent component={LeaveCreateUpdatePage} />

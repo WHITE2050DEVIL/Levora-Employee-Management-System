@@ -2,6 +2,9 @@
 import { Badge, Card, Table } from "react-bootstrap";
 
 const DepartmentHead = ({ departmentHeadsList }) => {
+  const resolveEmployeeName = (employee) =>
+    [employee?.FirstName, employee?.LastName].filter(Boolean).join(" ") || "Unnamed Employee";
+
   return (
     <Card>
       <Card.Body>
@@ -25,10 +28,13 @@ const DepartmentHead = ({ departmentHeadsList }) => {
                     />
                     <div>
                       <h5 className="mt-0 mb-1">
-                        {i?.FirstName + " " + i?.LastName}{" "}
+                        {resolveEmployeeName(i)}{" "}
                         <Badge>{i?.Department}</Badge>
                       </h5>
                       <span className="font-13">{i?.Email}</span>
+                      <div className="font-12 text-muted mt-1">
+                        {i?.Address || "No address on file"}
+                      </div>
                     </div>
                   </div>
                 </td>

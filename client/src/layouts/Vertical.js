@@ -1,5 +1,5 @@
 // @flow
-import React, { Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Container } from "react-bootstrap";
 import { Outlet } from "react-router-dom";
@@ -24,8 +24,6 @@ const VerticalLayout = () => {
 
   const { LayoutColor, LeftSideBarTheme, LeftSideBarType, LayoutWidth } =
     useSelector((state) => state.Setting);
-
-  const [isMenuOpened, setIsMenuOpened] = useState(false);
 
   /*
    * layout defaults
@@ -54,17 +52,16 @@ const VerticalLayout = () => {
    * Open the menu when having mobile screen
    */
   const openMenu = () => {
-    setIsMenuOpened((prevState) => {
-      const nextState = !prevState;
-      if (document.body) {
-        if (nextState) {
-          document.body.classList.add("sidebar-enable");
-        } else {
-          document.body.classList.remove("sidebar-enable");
-        }
-      }
-      return nextState;
-    });
+    if (!document.body) {
+      return;
+    }
+
+    const isEnabled = document.body.classList.contains("sidebar-enable");
+    if (isEnabled) {
+      document.body.classList.remove("sidebar-enable");
+    } else {
+      document.body.classList.add("sidebar-enable");
+    }
   };
 
   const updateDimensions = useCallback(() => {

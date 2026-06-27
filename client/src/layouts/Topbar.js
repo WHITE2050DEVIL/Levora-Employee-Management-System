@@ -107,7 +107,7 @@ const Topbar = ({
       return {
         id: `leave-${leave?._id || index}`,
         title: employeeName || "Leave request",
-        subText: `${leave?.LeaveType || "Leave"} - HOD: ${leave?.HodStatus || "Pending"}, Admin: ${leave?.AdminStatus || "Pending"}`,
+        subText: `${employee?.Department || "Unassigned"} | ${employee?.Address || "No address"} | ${leave?.LeaveType || "Leave"} - HOD: ${leave?.HodStatus || "Pending"}, Admin: ${leave?.AdminStatus || "Pending"}`,
         time: "Recent",
         avatar: employee?.Image || avatar1,
         isRead: false,
