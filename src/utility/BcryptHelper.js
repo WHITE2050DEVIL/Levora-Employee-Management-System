@@ -1,13 +1,24 @@
-const bcrypt = require("bcrypt");
+// =========================
+// External Library Import
+// =========================
+
+const bcrypt = require("bcryptjs");
+
+// =========================
+// Hash Password
+// =========================
 
 const HashPassword = async (password) => {
   if (!password) {
     throw new Error("Password is required");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
+  return await bcrypt.hash(password, 10);
 };
+
+// =========================
+// Verify Password
+// =========================
 
 const VerifyPassword = async (password, hashPassword) => {
   if (!password || !hashPassword) {
@@ -16,6 +27,10 @@ const VerifyPassword = async (password, hashPassword) => {
 
   return await bcrypt.compare(password, hashPassword);
 };
+
+// =========================
+// Export
+// =========================
 
 module.exports = {
   HashPassword,

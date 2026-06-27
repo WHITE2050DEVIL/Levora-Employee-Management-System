@@ -1,53 +1,120 @@
-//External Lib Import
-const bcrypt = require("bcrypt");
+// =========================
+// External Library Import
+// =========================
 
-//Internal Import
+const bcrypt = require("bcryptjs");
+
+// =========================
+// Internal Imports
+// =========================
+
 const { CreateError } = require("../../helper/ErrorHandler");
+
+// =========================
+// Helper Function
+// =========================
 
 const escapeRegExp = (value) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const RecoveryResetPassService = async (Request, EmployeesModel, OtpModel) => {
+// =========================
+// Recovery Reset Password Service
+// =========================
+
+const RecoveryResetPassService = async (
+  Request,
+  EmployeesModel,
+  OtpModel
+) => {
+  // Get OTP
   const OtpCode = String(
-    Request.body?.OtpCode || Request.body?.OTP || Request.params?.OtpCode || "",
+    Request.body?.OtpCode ||
+      Request.body?.OTP ||
+      Request.params?.OtpCode ||
+      ""
   ).trim();
-  const Email = String(Request.body?.Email || Request.params?.Email || "")
+
+  // Get Email
+  const Email = String(
+    Request.body?.Email ||
+      Request.params?.Email ||
+      ""
+  )
     .trim()
     .toLowerCase();
+
+  // Get Password
   let { Password } = Request.body;
+
+  // =========================
+  // Validation
+  // =========================
 
   if (!Password) {
     throw CreateError("Invalid Data", 400);
   }
 
+  // =========================
+  // Verify OTP
+  // =========================
+
   const countOtp = await OtpModel.aggregate([
     {
       $match: {
         $and: [
-          { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } },
-          { OtpCode: OtpCode },
-          { OtpStatus: 1 },
+          {
+            Email: {
+              $regex: `^${escapeRegExp(Email)}$`,
+              $options: "i",
+            },
+          },
+          {
+            OtpCode: OtpCode,
+          },
+          {
+            OtpStatus: 1,
+          },
         ],
       },
     },
   ]);
 
-  if (!countOtp.length > 0) {
-    throw CreateError("Invalid Otp Code", 400);
+  if (countOtp.length === 0) {
+    throw CreateError("Invalid OTP Code", 400);
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(Password, salt);
-  Password = hash;
+  // =========================
+  // Hash Password
+  // =========================
+
+  const hashedPassword = await bcrypt.hash(Password, 10);
+
+  // =========================
+  // Update Password
+  // =========================
 
   await EmployeesModel.updateOne(
-    { Email: { $regex: `^${escapeRegExp(Email)}$`, $options: "i" } },
     {
-      Password: Password,
+      Email: {
+        $regex: `^${escapeRegExp(Email)}$`,
+        $options: "i",
+      },
     },
-    { new: true },
+    {
+      Password: hashedPassword,
+    },
+    {
+      new: true,
+    }
   );
 
-  return { message: "Password Reset Successfull" };
+  // =========================
+  // Success Response
+  // =========================
+
+  return {
+    message: "Password Reset Successfully",
+  };
 };
+
 module.exports = RecoveryResetPassService;
